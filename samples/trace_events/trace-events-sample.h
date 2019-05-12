@@ -491,7 +491,7 @@ DEFINE_EVENT_PRINT(foo_template, foo_with_template_print,
  * I could specify a path from the define_trace.h file back to this
  * file.
  *
- * #define TRACE_INCLUDE_PATH ../../samples/trace_events
+#define TRACE_INCLUDE_PATH ../../samples/trace_events
  *
  * But the safest and easiest way to simply make it use the directory
  * that the file is in is to add in the Makefile:
@@ -507,7 +507,7 @@ DEFINE_EVENT_PRINT(foo_template, foo_with_template_print,
  *
  * And then let the path to this directory be the TRACE_INCLUDE_PATH:
  *
- * #define TRACE_INCLUDE_PATH samples/trace_events
+#define TRACE_INCLUDE_PATH ../../samples/trace_events
  *
  * But then if something defines "samples" or "trace_events" as a macro
  * then we could risk that being converted too, and give us an unexpected
@@ -515,7 +515,7 @@ DEFINE_EVENT_PRINT(foo_template, foo_with_template_print,
  */
 #undef TRACE_INCLUDE_PATH
 #undef TRACE_INCLUDE_FILE
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../samples/trace_events
 /*
  * TRACE_INCLUDE_FILE is not needed if the filename and TRACE_SYSTEM are equal
  */

@@ -93,6 +93,6 @@ TRACE_EVENT(msm_retired,
 
 /* This part must be outside protection */
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/gpu/drm/msm
 #include <trace/define_trace.h>
 

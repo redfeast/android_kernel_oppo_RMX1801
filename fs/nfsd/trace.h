@@ -51,6 +51,6 @@ DEFINE_STATEID_EVENT(layout_recall_release);
 #endif /* _NFSD_TRACE_H */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../fs/nfsd
 #define TRACE_INCLUDE_FILE trace
 #include <trace/define_trace.h>

@@ -34,6 +34,6 @@ TRACE_EVENT(spufs_context,
 #endif /* _TRACE_SPUFS_H */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../arch/powerpc/platforms/cell/spufs
 #define TRACE_INCLUDE_FILE sputrace
 #include <trace/define_trace.h>

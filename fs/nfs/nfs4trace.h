@@ -1203,7 +1203,7 @@ DEFINE_NFS4_INODE_EVENT(nfs4_layoutreturn_on_close);
 #endif /* _TRACE_NFS4_H */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../fs/nfs
 #define TRACE_INCLUDE_FILE nfs4trace
 /* This part must be outside protection */
 #include <trace/define_trace.h>

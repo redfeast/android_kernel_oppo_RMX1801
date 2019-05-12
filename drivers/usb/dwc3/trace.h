@@ -249,7 +249,7 @@ DEFINE_EVENT(dwc3_log_trb, dwc3_complete_trb,
 /* this part has to be here */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/usb/dwc3
 
 #undef TRACE_INCLUDE_FILE
 #define TRACE_INCLUDE_FILE trace

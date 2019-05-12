@@ -106,5 +106,5 @@ TRACE_EVENT(hw_ptr_error,
 
 /* This part must be outside protection */
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../sound/core
 #include <trace/define_trace.h>

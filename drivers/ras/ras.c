@@ -9,7 +9,7 @@
 #include <linux/ras.h>
 
 #define CREATE_TRACE_POINTS
-#define TRACE_INCLUDE_PATH ../../include/ras
+#define TRACE_INCLUDE_PATH ../../drivers/ras
 #include <ras/ras_event.h>
 
 static int __init ras_init(void)

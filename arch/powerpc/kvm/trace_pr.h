@@ -7,7 +7,7 @@
 
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM kvm_pr
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../arch/powerpc/kvm
 #define TRACE_INCLUDE_FILE trace_pr
 
 TRACE_EVENT(kvm_book3s_reenter,

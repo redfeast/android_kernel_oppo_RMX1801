@@ -287,5 +287,5 @@ DEFINE_EVENT(amdgpu_semaphore_request, amdgpu_semaphore_wait,
 
 /* This part must be outside protection */
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/gpu/drm/amd/amdgpu
 #include <trace/define_trace.h>

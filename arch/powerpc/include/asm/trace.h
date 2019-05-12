@@ -169,7 +169,7 @@ TRACE_EVENT(hash_fault,
 #undef TRACE_INCLUDE_PATH
 #undef TRACE_INCLUDE_FILE
 
-#define TRACE_INCLUDE_PATH asm
+#define TRACE_INCLUDE_PATH ../../arch/powerpc/include/asm
 #define TRACE_INCLUDE_FILE trace
 
 #include <trace/define_trace.h>

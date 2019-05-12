@@ -324,7 +324,7 @@ TRACE_EVENT(kvm_toggle_cache,
 #endif /* _TRACE_KVM_H */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH arch/arm/kvm
+#define TRACE_INCLUDE_PATH ../../arch/arm/kvm
 #undef TRACE_INCLUDE_FILE
 #define TRACE_INCLUDE_FILE trace
 

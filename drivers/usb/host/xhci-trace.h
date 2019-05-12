@@ -150,7 +150,7 @@ DEFINE_EVENT(xhci_log_event, xhci_cmd_completion,
 /* this part must be outside header guard */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/usb/host
 
 #undef TRACE_INCLUDE_FILE
 #define TRACE_INCLUDE_FILE xhci-trace

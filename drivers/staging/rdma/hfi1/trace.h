@@ -1428,6 +1428,6 @@ __hfi1_trace_def(TID);
 
 #undef TRACE_INCLUDE_PATH
 #undef TRACE_INCLUDE_FILE
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/staging/rdma/hfi1
 #define TRACE_INCLUDE_FILE trace
 #include <trace/define_trace.h>
