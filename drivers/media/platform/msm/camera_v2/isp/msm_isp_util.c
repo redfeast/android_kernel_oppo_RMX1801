@@ -22,7 +22,8 @@
 #include "cam_smmu_api.h"
 #include "msm_isp48.h"
 #define CREATE_TRACE_POINTS
-#include "trace/events/msm_cam.h"
+#include "msm_isp.h"
+#include <trace/events/msm_cam.h>
 
 
 #define MAX_ISP_V4l2_EVENTS 100
