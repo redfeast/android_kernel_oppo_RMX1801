@@ -22,8 +22,7 @@
 #include "msm_camera_io_util.h"
 #include "cam_smmu_api.h"
 #define CREATE_TRACE_POINTS
-#include "msm_isp.h"
-#include <trace/events/msm_cam.h>
+#include "trace/events/msm_cam.h"
 
 #define MAX_ISP_V4l2_EVENTS 100
 #define MAX_ISP_REG_LIST 100

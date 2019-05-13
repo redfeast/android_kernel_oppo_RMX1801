@@ -15,8 +15,7 @@
 #include <asm/div64.h>
 #include "msm_isp_util.h"
 #include "msm_isp_axi_util.h"
-#include "msm_isp.h"
-#include <trace/events/msm_cam.h>
+#include "trace/events/msm_cam.h"
 
 #define ISP_SOF_DEBUG_COUNT 0
 static int msm_isp_update_dual_HW_ms_info_at_start(

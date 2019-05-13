@@ -37,10 +37,12 @@
 
 #include "adv7481_reg.h"
 
-#include "msm_cci.h"
-#include "msm_camera_i2c.h"
-#include "msm_camera_io_util.h"
-#include "msm_camera_dt_util.h"
+#include "../platform/msm/camera_v2/sensor/io/msm_camera_i2c.h"
+#include "../platform/msm/camera_v2/sensor/io/msm_camera_dt_util.h"
+#include "../platform/msm/camera_v2/common/msm_camera_io_util.h"
+#include "../platform/msm/camera_v2/sensor/cci/msm_cci.h"
+
+
 
 #define DRIVER_NAME "adv7481"
 
