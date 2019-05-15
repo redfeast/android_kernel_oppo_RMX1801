@@ -1010,10 +1010,10 @@
 //#ifdef VENDOR_EDIT
 //Gou Shengjun@PSW.MM.Display.LCD.Stability, 2017/11/30,
 //add for lcd gpio 63 config
-		//compatible = "qcom,msm-cdc-pinctrl";
-		//pinctrl-names = "aud_active", "aud_sleep";
-		//pinctrl-0 = <&wcd_gnd_mic_swap_active>;
-		//pinctrl-1 = <&wcd_gnd_mic_swap_idle>;
+		compatible = "qcom,msm-cdc-pinctrl";
+		pinctrl-names = "aud_active", "aud_sleep";
+		pinctrl-0 = <&wcd_gnd_mic_swap_active>;
+		pinctrl-1 = <&wcd_gnd_mic_swap_idle>;
 //#endif /* VENDOR_EDIT */
 	};
 
