@@ -7,5 +7,5 @@ export VENDOR_EDIT=1
 export MSM_18321=1
 export IS_PROJECT_18321=1
 export OPPO_18321=1
-export KBUILD_BUILD_HOST=redfeast😎@Ubuntu-18.04-bionic
+export KBUILD_BUILD_HOST=Ubuntu-18.04-bionic
 export KBUILD_BUILD_USER=redfeast😎
