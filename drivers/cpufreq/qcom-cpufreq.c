@@ -235,10 +235,27 @@ static struct notifier_block __refdata msm_cpufreq_cpu_notifier = {
 	.notifier_call = msm_cpufreq_cpu_callback,
 };
 
+#ifdef VENDOR_EDIT //Cong.Dai@PSW.BSP.TP. 2018/05/27, Add var to store current policy
+static unsigned int current_min = 0;    /* in kHz */
+static unsigned int current_max = 0;    /* in kHz */
+#endif /* VENDOR_EDIT */
 static int msm_cpufreq_suspend(void)
 {
 	int cpu;
+#ifdef VENDOR_EDIT
+	//Cong.Dai@PSW.BSP.TP. Bugid 974861, 2017/05/20, Add for improving cpu frequency in resuming
+	//Cong.Dai@PSW.BSP.TP. Bugid 1034870, 2017/06/28, modified for only improving little core frequency
+	struct cpufreq_policy *pol0;
 
+	pol0 = cpufreq_cpu_get(0);
+	if (pol0) {
+		current_min = pol0->user_policy.min;
+		current_max = pol0->user_policy.max;
+		pol0->user_policy.min = pol0->cpuinfo.max_freq;
+		pol0->user_policy.max = pol0->cpuinfo.max_freq;
+		cpufreq_update_policy(0);
+	}
+#endif /* VENDOR_EDIT */
 	for_each_possible_cpu(cpu) {
 		mutex_lock(&per_cpu(suspend_data, cpu).suspend_mutex);
 		per_cpu(suspend_data, cpu).device_suspended = 1;
@@ -252,7 +269,18 @@ static int msm_cpufreq_resume(void)
 {
 	int cpu, ret;
 	struct cpufreq_policy policy;
+#ifdef VENDOR_EDIT
+	//Cong.Dai@PSW.BSP.TP, Bugid 1021481, 2017/06/07, Add for restore cpu frequency policy after resume
+	//Cong.Dai@PSW.BSP.TP. Bugid 1034870, 2017/06/28, modified in corresponding with msm_cpufreq_suspend
+	struct cpufreq_policy *pol0;
 
+	pol0 = cpufreq_cpu_get(0);
+	if (pol0) {
+		pol0->user_policy.min = current_min;
+		pol0->user_policy.max = current_max;
+		cpufreq_update_policy(0);
+	}
+#endif /* VENDOR_EDIT */
 	for_each_possible_cpu(cpu) {
 		per_cpu(suspend_data, cpu).device_suspended = 0;
 	}

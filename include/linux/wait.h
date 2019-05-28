@@ -242,6 +242,7 @@ wait_queue_head_t *bit_waitqueue(void *, int);
 	finish_wait(&wq, &__wait);					\
 __out:	__ret;								\
 })
+//#endif
 
 #define __wait_event(wq, condition)					\
 	(void)___wait_event(wq, condition, TASK_UNINTERRUPTIBLE, 0, 0,	\

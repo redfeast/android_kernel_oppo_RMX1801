@@ -70,7 +70,12 @@ enum ion_heap_type {
 					 * caches must be managed
 					 * manually
 					 */
-
+#ifdef VENDOR_EDIT /* Shiming.Zhang@PSW.BSP.Driver.ION */
+#define ION_FLAG_ALLOC_NO_SYNC 4        /* indicate no need do dma sync 
+                                         * as default, we do sync when ion_system_heap_allocate()
+                                         * as now it is only used in ion_system_heap_allocate() 
+                                         */
+#endif
 /**
  * DOC: Ion Userspace API
  *
@@ -199,5 +204,16 @@ struct ion_custom_data {
  * passes appropriate userdata for that ioctl
  */
 #define ION_IOC_CUSTOM		_IOWR(ION_IOC_MAGIC, 6, struct ion_custom_data)
+
+#ifdef VENDOR_EDIT /* Shiming.Zhang@PSW.BSP.Driver.ION */
+/**
+ * DOC: ION_IOC_ALLOC_NOSYNC - allocate memory
+ *
+ * similiar to ION_IOC_ALLOC except it doesn't need dma sync
+ * it could speed up ION system heap allocate
+ */
+#define ION_IOC_ALLOC_NOSYNC		_IOWR(ION_IOC_MAGIC, 8, \
+				      struct ion_allocation_data)
+#endif
 
 #endif /* _UAPI_LINUX_ION_H */

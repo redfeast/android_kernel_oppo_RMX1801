@@ -116,16 +116,19 @@ static struct snd_soc_platform_driver msm_soc_hostless_platform = {
 
 static int msm_pcm_hostless_probe(struct platform_device *pdev)
 {
+
 	struct hostless_pdata *pdata;
 
 	pdata = devm_kzalloc(&pdev->dev, sizeof(*pdata), GFP_KERNEL);
 	if (!pdata)
 		return -ENOMEM;
 	pr_debug("%s: dev name %s\n", __func__, dev_name(&pdev->dev));
+
 	pdata->dev = &pdev->dev;
 	INIT_WORK(&pdata->msm_test_add_child_dev_work,
 		  msm_test_add_child_dev);
 	schedule_work(&pdata->msm_test_add_child_dev_work);
+
 	return snd_soc_register_platform(&pdev->dev,
 				   &msm_soc_hostless_platform);
 }

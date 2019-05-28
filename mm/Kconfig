@@ -732,3 +732,12 @@ config PROCESS_RECLAIM
 	 (addr, addr + size-bytes) of the process.
 
 	 Any other vaule is ignored.
+
+config PROCESS_RECLAIM_VMPRESSURE
+	bool "Enable vmpressure based process reclaim"
+	depends on PROCESS_RECLAIM
+	default n
+	help
+	 It allows to reclaim pages according to vmpressure.
+
+	 If unsure, say "n"

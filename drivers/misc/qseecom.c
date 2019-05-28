@@ -1897,6 +1897,7 @@ static int __qseecom_process_blocked_on_listener_legacy(
 	ptr_app->blocked_on_listener_id = resp->data;
 
 	/* sleep until listener is available */
+
 	do {
 		qseecom.app_block_ref_cnt++;
 		ptr_app->app_blocked = true;
@@ -1906,6 +1907,7 @@ static int __qseecom_process_blocked_on_listener_legacy(
 			!list_ptr->listener_in_use)) {
 			pr_err("Interrupted: listener_id %d, app_id %d\n",
 				resp->data, ptr_app->app_id);
+
 			ret = -ERESTARTSYS;
 			goto exit;
 		}
@@ -1963,6 +1965,7 @@ static int __qseecom_process_blocked_on_listener_smcinvoke(
 	pr_debug("lsntr %d in_use = %d\n",
 			resp->data, list_ptr->listener_in_use);
 	/* sleep until listener is available */
+
 	do {
 		qseecom.app_block_ref_cnt++;
 		mutex_unlock(&app_access_lock);
@@ -1987,6 +1990,7 @@ static int __qseecom_process_blocked_on_listener_smcinvoke(
 			&ireq, sizeof(ireq),
 			&continue_resp, sizeof(continue_resp));
 	if (ret) {
+
 		/* retry with legacy cmd */
 		qseecom.smcinvoke_support = false;
 		ireq.app_or_session_id = app_id;

@@ -73,6 +73,10 @@ config FILE_LOCKING
           for filesystems like NFS and for the flock() system
           call. Disabling this option saves about 11k.
 
+#ifdef VENDOR_EDIT
+#Chunyi.Mei@PSW.BSP.FS.F2FS, 2017-10-23, Add for support f2fs
+source "fs/crypto/Kconfig"
+#endif /* VENDOR_EDIT */
 source "fs/notify/Kconfig"
 
 source "fs/quota/Kconfig"
@@ -287,4 +291,8 @@ config FILE_TABLE_DEBUG
 	help
 	  This option enables debug of the open files using a global filetable
 
+#ifdef VENDOR_EDIT
+#Xinhua.Song@BSP.Driver, 2015/04/03, Add for exfat filesystem
+source "fs/exfat/Kconfig"
+#endif /*VENDOR_EDIT*/
 endmenu

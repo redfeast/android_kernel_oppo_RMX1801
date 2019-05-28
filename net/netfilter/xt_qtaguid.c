@@ -12,7 +12,7 @@
  * There are run-time debug flags enabled via the debug_mask module param, or
  * via the DEFAULT_DEBUG_MASK. See xt_qtaguid_internal.h.
  */
-#define DEBUG
+//#define DEBUG
 
 #include <linux/file.h>
 #include <linux/inetdevice.h>
@@ -28,6 +28,7 @@
 #include <net/sock.h>
 #include <net/tcp.h>
 #include <net/udp.h>
+
 
 #if defined(CONFIG_IP6_NF_IPTABLES) || defined(CONFIG_IP6_NF_IPTABLES_MODULE)
 #include <linux/netfilter_ipv6/ip6_tables.h>
@@ -412,6 +413,15 @@ static struct uid_tag_data *uid_tag_data_tree_search(struct rb_root *root,
 	return NULL;
 }
 
+#ifdef VENDOR_EDIT
+//Yunqing.Zeng@BSP.Power.Basic 2018/01/11 add for backup of netstat before sleep
+struct proc_dir_entry * get_xt_qtaguid_procdir(void)
+{
+	return xt_qtaguid_procdir;
+}
+EXPORT_SYMBOL(get_xt_qtaguid_procdir);
+#endif /* VENDOR_EDIT */
+
 /*
  * Allocates a new uid_tag_data struct if needed.
  * Returns a pointer to the found or allocated uid_tag_data.
@@ -657,6 +667,7 @@ done:
 	return iface_entry;
 }
 
+
 /* This is for fmt2 only */
 static void pp_iface_stat_header(struct seq_file *m)
 {
@@ -868,6 +879,7 @@ static struct iface_stat *iface_alloc(struct net_device *net_dev)
 	}
 	spin_lock_init(&new_iface->tag_stat_list_lock);
 	new_iface->tag_stat_tree = RB_ROOT;
+
 	_iface_stat_set_active(new_iface, net_dev, true);
 
 	/*
@@ -1244,8 +1256,12 @@ static void iface_stat_update_from_skb(const struct sk_buff *skb,
 	spin_unlock_bh(&iface_stat_list_lock);
 }
 
+
+
+
 static void tag_stat_update(struct tag_stat *tag_entry,
-			enum ifs_tx_rx direction, int proto, int bytes)
+            enum ifs_tx_rx direction, int proto, int bytes)
+
 {
 	int active_set;
 	active_set = get_active_counter_set(tag_entry->tn.tag);
@@ -1258,6 +1274,7 @@ static void tag_stat_update(struct tag_stat *tag_entry,
 	if (tag_entry->parent_counters)
 		data_counters_update(tag_entry->parent_counters, active_set,
 				     direction, proto, bytes);
+
 }
 
 /*
@@ -1283,9 +1300,11 @@ done:
 	return new_tag_stat_entry;
 }
 
+
 static void if_tag_stat_update(const char *ifname, uid_t uid,
 			       const struct sock *sk, enum ifs_tx_rx direction,
 			       int proto, int bytes)
+
 {
 	struct tag_stat *tag_stat_entry;
 	tag_t tag, acct_tag;
@@ -1338,7 +1357,8 @@ static void if_tag_stat_update(const char *ifname, uid_t uid,
 		 * Updating the {acct_tag, uid_tag} entry handles both stats:
 		 * {0, uid_tag} will also get updated.
 		 */
-		tag_stat_update(tag_stat_entry, direction, proto, bytes);
+
+        tag_stat_update(tag_stat_entry, direction, proto, bytes);
 		goto unlock;
 	}
 
@@ -1376,6 +1396,7 @@ static void if_tag_stat_update(const char *ifname, uid_t uid,
 		 */
 		BUG_ON(!new_tag_stat);
 	}
+
 	tag_stat_update(new_tag_stat, direction, proto, bytes);
 unlock:
 	spin_unlock_bh(&iface_entry->tag_stat_list_lock);
@@ -1581,6 +1602,7 @@ err:
 
 static struct sock *qtaguid_find_sk(const struct sk_buff *skb,
 				    struct xt_action_param *par)
+
 {
 	struct sock *sk;
 	unsigned int hook_mask = (1 << par->hooknum);
@@ -1606,6 +1628,7 @@ static struct sock *qtaguid_find_sk(const struct sk_buff *skb,
 		return NULL;
 	}
 
+
 	if (sk) {
 		MT_DEBUG("qtaguid[%d]: %p->sk_proto=%u->sk_state=%d\n",
 			 par->hooknum, sk, sk->sk_protocol, sk->sk_state);
@@ -1624,6 +1647,7 @@ static struct sock *qtaguid_find_sk(const struct sk_buff *skb,
 static void account_for_uid(const struct sk_buff *skb,
 			    const struct sock *alternate_sk, uid_t uid,
 			    struct xt_action_param *par)
+
 {
 	const struct net_device *el_dev;
 	enum ifs_tx_rx direction;
@@ -1635,10 +1659,11 @@ static void account_for_uid(const struct sk_buff *skb,
 		 par->hooknum, el_dev->name, el_dev->type,
 		 par->family, proto, direction);
 
-	if_tag_stat_update(el_dev->name, uid,
-			   skb->sk ? skb->sk : alternate_sk,
-			   direction,
-			   proto, skb->len);
+	    if_tag_stat_update(el_dev->name, uid,
+			    skb->sk ? skb->sk : alternate_sk,
+			    direction,
+			    proto, skb->len);
+
 }
 
 static bool qtaguid_mt(const struct sk_buff *skb, struct xt_action_param *par)
@@ -1696,7 +1721,9 @@ static bool qtaguid_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		 * A missing sk->sk_socket happens when packets are in-flight
 		 * and the matching socket is already closed and gone.
 		 */
+
 		sk = qtaguid_find_sk(skb, par);
+
 		/*
 		 * If we got the socket from the find_sk(), we will need to put
 		 * it back, as nf_tproxy_get_sock_v4() got it.
@@ -1728,8 +1755,12 @@ static bool qtaguid_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		 * couldn't find the owner, so for now we just count them
 		 * against the system.
 		 */
+
+
 		if (do_tag_stat)
 			account_for_uid(skb, sk, 0, par);
+
+
 		MT_DEBUG("qtaguid[%d]: leaving (sk?sk->sk_socket)=%p\n",
 			par->hooknum,
 			sk ? sk->sk_socket : NULL);
@@ -1751,8 +1782,10 @@ static bool qtaguid_mt(const struct sk_buff *skb, struct xt_action_param *par)
 		goto put_sock_ret_res;
 	}
 	sock_uid = filp->f_cred->fsuid;
+
 	if (do_tag_stat)
 		account_for_uid(skb, sk, from_kuid(&init_user_ns, sock_uid), par);
+
 
 	/*
 	 * The following two tests fail the match when:
@@ -2942,6 +2975,7 @@ static const struct file_operations proc_qtaguid_stats_fops = {
 	.release	= seq_release_private,
 };
 
+
 /*------------------------------------------*/
 static int __init qtaguid_proc_register(struct proc_dir_entry **res_procdir)
 {
@@ -2978,6 +3012,7 @@ static int __init qtaguid_proc_register(struct proc_dir_entry **res_procdir)
 	 * TODO: add support counter hacking
 	 * xt_qtaguid_stats_file->write_proc = qtaguid_stats_proc_write;
 	 */
+
 	return 0;
 
 no_stats_entry:

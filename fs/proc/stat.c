@@ -12,6 +12,12 @@
 #include <linux/cputime.h>
 #include <linux/tick.h>
 
+#ifdef VENDOR_EDIT
+// wenbin.liu@PSW.BSP.MM, 2018/05/02
+// Add for get cpu load
+#include <linux/delay.h>
+#endif /*VENDOR_EDIT*/
+
 #ifndef arch_irq_stat_cpu
 #define arch_irq_stat_cpu(cpu) 0
 #endif
@@ -45,6 +51,10 @@ static cputime64_t get_iowait_time(int cpu)
 
 static u64 get_idle_time(int cpu)
 {
+	#ifdef VENDOR_EDIT
+	// liangkun@Swdp.shanghai 2015/11/03 modify to get valid stat
+	return kcpustat_cpu(cpu).cpustat[CPUTIME_IDLE];
+	#else
 	u64 idle, idle_time = -1ULL;
 
 	if (cpu_online(cpu))
@@ -57,10 +67,15 @@ static u64 get_idle_time(int cpu)
 		idle = usecs_to_cputime64(idle_time);
 
 	return idle;
+	#endif
 }
 
 static u64 get_iowait_time(int cpu)
 {
+	#ifdef VENDOR_EDIT
+	// liangkun@Swdp.shanghai 2015/11/03 modify to get valid stat
+	return kcpustat_cpu(cpu).cpustat[CPUTIME_IOWAIT];
+	#else
 	u64 iowait, iowait_time = -1ULL;
 
 	if (cpu_online(cpu))
@@ -73,6 +88,7 @@ static u64 get_iowait_time(int cpu)
 		iowait = usecs_to_cputime64(iowait_time);
 
 	return iowait;
+	#endif
 }
 
 #endif
@@ -130,7 +146,12 @@ static int show_stat(struct seq_file *p, void *v)
 	seq_put_decimal_ull(p, ' ', cputime64_to_clock_t(guest_nice));
 	seq_putc(p, '\n');
 
+	#ifdef VENDOR_EDIT
+	// liangkun@Swdp.shanghai 2015/11/03 modify to get all cpus stat
+	for_each_present_cpu(i) {
+	#else
 	for_each_online_cpu(i) {
+	#endif
 		/* Copy values here to work around gcc-2.95.3, gcc-2.96 */
 		user = kcpustat_cpu(i).cpustat[CPUTIME_USER];
 		nice = kcpustat_cpu(i).cpustat[CPUTIME_NICE];
@@ -197,6 +218,20 @@ static const struct file_operations proc_stat_operations = {
 	.llseek		= seq_lseek,
 	.release	= single_release,
 };
+
+#ifdef VENDOR_EDIT
+// wenbin.liu@PSW.BSP.MM, 2018/05/02
+// Add for get cpu load
+struct cpu_load_stat {
+        u64 t_user;
+        u64 t_system;
+        u64 t_idle;
+        u64 t_iowait;
+        u64 t_irq;
+        u64 t_softirq;
+};
+
+#endif /*VENDOR_EDIT*/
 
 static int __init proc_stat_init(void)
 {

@@ -899,6 +899,26 @@ update_stats_wait_start(struct cfs_rq *cfs_rq, struct sched_entity *se)
 	se->statistics.wait_start = wait_start;
 }
 
+#ifdef VENDOR_EDIT
+// wenbin.liu@PSW.BSP.MM, 2018/05/09
+// Add for cat io_wait stats
+struct wait_para {
+        int low_thresh_ms;
+        int high_thresh_ms;
+        u64 low_cnt;
+        u64 high_cnt;
+        u64 total_ms;
+        u64 total_cnt;
+        u64 fg_low_cnt;
+        u64 fg_high_cnt;
+        u64 fg_total_ms;
+        u64 fg_total_cnt;
+        u64 delta_ms;
+};
+struct wait_para sched_latency_para = {100, 500, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+struct wait_para iowait_para = {100, 500, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+#endif /*VENDOR_EDIT*/
+
 static void
 update_stats_wait_end(struct cfs_rq *cfs_rq, struct sched_entity *se)
 {
@@ -8971,8 +8991,17 @@ static void update_cpu_capacity(struct sched_domain *sd, int cpu)
 		mcc->cpu = cpu;
 #ifdef CONFIG_SCHED_DEBUG
 		raw_spin_unlock_irqrestore(&mcc->lock, flags);
+#ifndef VENDOR_EDIT
+// wenbin.liu@BSP.CHG.Basic, 2018/01/09
+// Add for mp log too more
 		printk_deferred(KERN_INFO "CPU%d: update max cpu_capacity %lu\n",
 				cpu, capacity);
+#else
+#if (defined(CONFIG_OPPO_DAILY_BUILD) || defined(CONFIG_OPPO_SPECIAL_BUILD))
+		printk_deferred(KERN_INFO "CPU%d: update max cpu_capacity %lu\n",
+				cpu, capacity);
+#endif
+#endif /*VENDOR_EDIT*/
 		goto skip_unlock;
 #endif
 	}

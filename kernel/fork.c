@@ -1337,6 +1337,11 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 
 	ftrace_graph_init_task(p);
 
+#if defined(VENDOR_EDIT) && defined(CONFIG_PROCESS_RECLAIM)
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+	proc_reclaim_init_task(p);
+#endif
+
 	rt_mutex_init_task(p);
 
 #ifdef CONFIG_PROVE_LOCKING
@@ -1739,6 +1744,7 @@ long _do_fork(unsigned long clone_flags,
 	int trace = 0;
 	long nr;
 
+
 	/*
 	 * Determine whether and which event to report to ptracer.  When
 	 * called from kernel_thread or CLONE_UNTRACED is explicitly
@@ -1771,6 +1777,7 @@ long _do_fork(unsigned long clone_flags,
 
 		pid = get_task_pid(p, PIDTYPE_PID);
 		nr = pid_vnr(pid);
+
 
 		if (clone_flags & CLONE_PARENT_SETTID)
 			put_user(nr, parent_tidptr);

@@ -8,7 +8,7 @@
 
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM kvm_hv
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../arch/powerpc/kvm
 #define TRACE_INCLUDE_FILE trace_hv
 
 #define kvm_trace_symbol_hcall \

@@ -14,6 +14,7 @@
 #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/irqreturn.h>
+#include <linux/debugfs.h>
 #include "msm_csid.h"
 #include "msm_sd.h"
 #include "msm_camera_io_util.h"
@@ -59,7 +60,12 @@
 #define FALSE  0
 
 #define MAX_LANE_COUNT 4
+#ifndef VENDOR_EDIT
+/*Add by Zhengrong.Zhang@Camera 20160805 for csid reset timeout*/
 #define CSID_TIMEOUT msecs_to_jiffies(100)
+#else
+#define CSID_TIMEOUT msecs_to_jiffies(500)
+#endif
 
 #undef CDBG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
@@ -71,6 +77,10 @@ static struct camera_vreg_t csid_vreg_info[] = {
 #ifdef CONFIG_COMPAT
 static struct v4l2_file_operations msm_csid_v4l2_subdev_fops;
 #endif
+
+void __iomem *csidbase0_global;
+void __iomem *csidbase1_global;
+void __iomem *csidbase2_global;
 
 static int msm_csid_cid_lut(
 	struct msm_camera_csid_lut_params *csid_lut_params,
@@ -401,6 +411,7 @@ static int msm_csid_config(struct csid_device *csid_dev,
 			val |= 0xF;
 			msm_camera_io_w(val, csidbase +
 			csid_dev->ctrl_reg->csid_reg.csid_core_ctrl_1_addr);
+			pr_err("VJ## test log: csid - %d, reg offset = 0x%x, value = 0x%x", csid_dev->pdev->id, csid_dev->ctrl_reg->csid_reg.csid_core_ctrl_1_addr, val);
 		}
 		if (csid_dev->hw_version >= CSID_VERSION_V35 &&
 			csid_params->csi_3p_sel == 1) {
@@ -513,6 +524,39 @@ static int msm_csid_irq_routine(struct v4l2_subdev *sd, u32 status,
 	return 0;
 }
 
+static int csid_dump_open(struct inode *inode, struct file *file)
+{
+	pr_err("VJ## csid_dump_open");
+	return 0;
+}
+
+static ssize_t csid_dump_read(struct file *file, char __user *buff,
+		size_t count, loff_t *ppos)
+{
+	pr_err("VJ## csid_dump_read");
+	return 0;
+}
+
+static ssize_t csid_dump_write(struct file *file,
+	const char __user *user_buf, size_t count, loff_t *ppos)
+{
+	int i;
+	uint32_t value = 0;
+	pr_err("VJ## csid_dump_write");
+
+	for (i=0; i<56; i++) {
+		value = msm_camera_io_r(csidbase2_global + i*4);
+		pr_err("CSID DUMP: reg offset: 0x%x, data = 0x%x \n", i*4, value);
+	}
+	return count;
+}
+
+static const struct file_operations csid_dump_fops = {
+	.open = csid_dump_open,
+	.read = csid_dump_read,
+	.write = csid_dump_write,
+};
+
 static int msm_csid_init(struct csid_device *csid_dev, uint32_t *csid_version)
 {
 	int rc = 0;
@@ -538,9 +582,21 @@ static int msm_csid_init(struct csid_device *csid_dev, uint32_t *csid_version)
 		pr_err("%s: failed to vote for AHB\n", __func__);
 		return rc;
 	}
+	//if (csid_dev->pdev->id == 0)
+		csidbase0_global = csid_dev->base;
+	//else if (csid_dev->pdev->id == 1)
+		csidbase1_global = csid_dev->base;
+	//else if (csid_dev->pdev->id == 2)
+		csidbase2_global = csid_dev->base;
 
+#ifndef VENDOR_EDIT
+/*modified by Jinshui.Liu@Camera 20160827 for [less log]*/
 	pr_info("%s: CSID_VERSION = 0x%x\n", __func__,
 		csid_dev->ctrl_reg->csid_reg.csid_version);
+#else
+	CDBG("%s: CSID_VERSION = 0x%x\n", __func__,
+		csid_dev->ctrl_reg->csid_reg.csid_version);
+#endif
 	/* power up */
 	rc = msm_camera_config_vreg(&csid_dev->pdev->dev, csid_dev->csid_vreg,
 		csid_dev->regulator_count, NULL, 0,
@@ -604,6 +660,11 @@ static int msm_csid_init(struct csid_device *csid_dev, uint32_t *csid_version)
 	}
 
 	csid_dev->csid_state = CSID_POWER_UP;
+	csid_dev->csid_dump = debugfs_create_dir("csid_dump", NULL);
+
+	debugfs_create_file("dump", 0644, csid_dev->csid_dump, NULL,
+		&csid_dump_fops);
+
 	return rc;
 
 msm_csid_reset_fail:

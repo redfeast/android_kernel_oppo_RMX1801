@@ -16,6 +16,7 @@
 #include <linux/of.h>
 #include <linux/module.h>
 #include <linux/irqreturn.h>
+#include <linux/debugfs.h>
 #include "msm_csiphy.h"
 #include "msm_sd.h"
 #include "include/msm_csiphy_2_0_hwreg.h"
@@ -749,6 +750,9 @@ static int msm_csiphy_2phase_lane_config_v50(
 	return 0;
 }
 
+void __iomem *csiphybase0_global;
+void __iomem *csiphybase1_global;
+
 static int msm_csiphy_lane_config(struct csiphy_device *csiphy_dev,
 	struct msm_camera_csiphy_params *csiphy_params)
 {
@@ -989,7 +993,39 @@ void msm_csiphy_disable_irq(
 		csiphybase + csiphy_dev->ctrl_reg->csiphy_3ph_reg.
 		mipi_csiphy_3ph_cmn_ctrl21.addr);
 }
+static int csiphy_dump_open(struct inode *inode, struct file *file)
+{
+	pr_err("VJ## csiphy_dump_open");
+	return 0;
+}
 
+static ssize_t csiphy_dump_read(struct file *file, char __user *buff,
+		size_t count, loff_t *ppos)
+{
+	pr_err("VJ## csiphy_dump_read");
+	return 0;
+}
+
+static ssize_t csiphy_dump_write(struct file *file,
+	const char __user *user_buf, size_t count, loff_t *ppos)
+{
+	int i;
+	uint32_t value;
+	pr_err("VJ## csiphy_dump_write");
+
+	for (i=0; i<576; i++) {
+		value = msm_camera_io_r(csiphybase1_global+ i*4);
+		pr_err("CSIPHY DUMP: reg offset: 0x%x, data = 0x%x \n", i*4, value);
+	}
+
+	return count;
+}
+
+static const struct file_operations csiphy_dump_fops = {
+	.open = csiphy_dump_open,
+	.read = csiphy_dump_read,
+	.write = csiphy_dump_write,
+};
 static irqreturn_t msm_csiphy_irq(int irq_num, void *data)
 {
 	uint32_t irq;
@@ -1229,6 +1265,11 @@ static int msm_csiphy_init(struct csiphy_device *csiphy_dev)
 	else
 		msm_csiphy_reset(csiphy_dev);
 
+	if (csiphy_dev->pdev->id == 0)
+		csiphybase0_global = csiphy_dev->base;
+	else if (csiphy_dev->pdev->id == 1)
+		csiphybase1_global = csiphy_dev->base;
+
 	CDBG("%s:%d called\n", __func__, __LINE__);
 
 	if (csiphy_dev->hw_dts_version == CSIPHY_VERSION_V30)
@@ -1243,6 +1284,10 @@ static int msm_csiphy_init(struct csiphy_device *csiphy_dev)
 	CDBG("%s:%d called csiphy_dev->hw_version 0x%x\n", __func__, __LINE__,
 		csiphy_dev->hw_version);
 	csiphy_dev->csiphy_state = CSIPHY_POWER_UP;
+	csiphy_dev->csiphy_dump = debugfs_create_dir("csiphy_dump", NULL);
+
+	debugfs_create_file("dump", 0644, csiphy_dev->csiphy_dump, NULL,
+		&csiphy_dump_fops);
 	return 0;
 
 csiphy_enable_clk_fail:

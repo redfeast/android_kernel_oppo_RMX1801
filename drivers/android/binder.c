@@ -2101,6 +2101,7 @@ static void binder_send_failed_reply(struct binder_transaction *t,
 	}
 }
 
+#ifdef VENDOR_EDIT//Fanhong.Kong@PSW.BSP.CHG, 2018/1/18, Add for transaction release 2times,case 03307495
 /**
  * binder_cleanup_transaction() - cleans up undelivered transaction
  * @t:		transaction that needs to be cleaned up
@@ -2120,6 +2121,7 @@ static void binder_cleanup_transaction(struct binder_transaction *t,
 		binder_free_transaction(t);
 	}
 }
+#endif /*VENDOR_EDIT*/
 
 /**
  * binder_validate_object() - checks for a valid metadata object in a buffer.
@@ -3258,8 +3260,7 @@ static void binder_transaction(struct binder_proc *proc,
 	}
 	tcomplete->type = BINDER_WORK_TRANSACTION_COMPLETE;
 	binder_enqueue_work(proc, tcomplete, &thread->todo);
-	t->work.type = BINDER_WORK_TRANSACTION;
-
+	t->work.type = BINDER_WORK_TRANSACTION;	
 	if (reply) {
 		binder_inner_proc_lock(target_proc);
 		if (target_thread->is_dead) {
@@ -3292,6 +3293,7 @@ static void binder_transaction(struct binder_proc *proc,
 		if (!binder_proc_transaction(t, target_proc, NULL))
 			goto err_dead_proc_or_thread;
 	}
+
 	if (target_thread)
 		binder_thread_dec_tmpref(target_thread);
 	binder_proc_dec_tmpref(target_proc);
@@ -3303,6 +3305,7 @@ static void binder_transaction(struct binder_proc *proc,
 	 */
 	smp_wmb();
 	WRITE_ONCE(e->debug_id_done, t_debug_id);
+
 	return;
 
 err_dead_proc_or_thread:
@@ -4208,10 +4211,12 @@ retry:
 		if (put_user(cmd, (uint32_t __user *)ptr)) {
 			if (t_from)
 				binder_thread_dec_tmpref(t_from);
-
+				
+#ifdef VENDOR_EDIT//Fanhong.Kong@PSW.BSP.CHG, 2018/1/18, Add for transaction release 2times,case 03307495
 			binder_cleanup_transaction(t, "put_user failed",
-						   BR_FAILED_REPLY);
-
+						   BR_FAILED_REPLY);	
+#endif /*VENDOR_EDIT*/		
+				   
 			return -EFAULT;
 		}
 		ptr += sizeof(uint32_t);
@@ -4219,9 +4224,10 @@ retry:
 			if (t_from)
 				binder_thread_dec_tmpref(t_from);
 
-			binder_cleanup_transaction(t, "copy_to_user failed",
-						   BR_FAILED_REPLY);
-
+#ifdef VENDOR_EDIT//Fanhong.Kong@PSW.BSP.CHG, 2018/1/18, Add for transaction release 2times,case 03307495				
+			binder_cleanup_transaction(t, "copy_to_user failed", BR_FAILED_REPLY);
+#endif /*VENDOR_EDIT*/	
+		
 			return -EFAULT;
 		}
 		ptr += sizeof(tr);
@@ -4292,8 +4298,22 @@ static void binder_release_work(struct binder_proc *proc,
 
 			t = container_of(w, struct binder_transaction, work);
 
+#ifndef VENDOR_EDIT//Fanhong.Kong@PSW.BSP.CHG, 2018/1/18, Add for transaction release 2times,case 03307495			
+/*			if (t->buffer->target_node &&
+			    !(t->flags & TF_ONE_WAY)) {
+				binder_send_failed_reply(t, BR_DEAD_REPLY);
+			} else {
+				binder_debug(BINDER_DEBUG_DEAD_TRANSACTION,
+					"undelivered transaction %d\n",
+					t->debug_id);
+				binder_free_transaction(t);
+			}
+*/
+#else /*VENDOR_EDIT*/		
 			binder_cleanup_transaction(t, "process died.",
-						   BR_DEAD_REPLY);
+						   BR_DEAD_REPLY);	
+#endif /*VENDOR_EDIT*/	
+						   	
 		} break;
 		case BINDER_WORK_RETURN_ERROR: {
 			struct binder_error *e = container_of(
@@ -4730,6 +4750,7 @@ static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 err:
 	if (thread)
 		thread->looper_need_return = false;
+
 	wait_event_interruptible(binder_user_error_wait, binder_stop_on_user_error < 2);
 	if (ret && ret != -ERESTARTSYS)
 		pr_info("%d:%d ioctl %x %lx returned %d\n", proc->pid, current->pid, cmd, arg, ret);

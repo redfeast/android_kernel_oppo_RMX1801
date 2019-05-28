@@ -74,7 +74,7 @@ TRACE_EVENT(iwlwifi_dev_rx_data,
 #endif /* __IWLWIFI_DEVICE_TRACE_DATA */
 
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/net/wireless/iwlwifi
 #undef TRACE_INCLUDE_FILE
 #define TRACE_INCLUDE_FILE iwl-devtrace-data
 #include <trace/define_trace.h>

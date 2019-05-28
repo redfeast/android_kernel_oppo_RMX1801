@@ -18,6 +18,10 @@
 #include <linux/err.h>
 #include <linux/qpnp/qpnp-revid.h>
 #include <linux/of.h>
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@BSP.CHG.Basic, 2017/04/10, sjc Add for PMIC version */
+#include <soc/oppo/device_info.h>
+#endif
 
 #define REVID_REVISION1	0x0
 #define REVID_REVISION2	0x1
@@ -153,6 +157,39 @@ static size_t build_pmic_string(char *buf, size_t n, int sid,
 	return pos;
 }
 
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@BSP.CHG.Basic, 2017/04/10, sjc Add for PMIC version */
+#define STRING_LEN	32
+static void register_PMIC_devinfo(struct revid_chip *revid_chip)
+{
+	int ret = 0;
+	char *version;
+	char *manufacture;
+
+	version = (char *)kzalloc(STRING_LEN, GFP_KERNEL);
+	manufacture = (char *)kzalloc(STRING_LEN, GFP_KERNEL);
+	snprintf(manufacture, STRING_LEN - 1, "%s", "QCOM");
+	ret = snprintf(version, STRING_LEN - 1, "v%d.%d", revid_chip->data.rev4, revid_chip->data.rev3);
+	if (ret <= 0)
+		snprintf(version, STRING_LEN - 1, "%s", "unknown");
+
+	switch (revid_chip->data.pmic_subtype) {
+		case PM660_SUBTYPE:
+			ret = register_device_proc("PMIC660", version, manufacture);
+			if (ret)
+				pr_err("register_PMIC_devinfo fail\n");
+			break;
+		case PM660L_SUBTYPE:
+			ret = register_device_proc("PMIC660L", version, manufacture);
+			if (ret)
+				pr_err("register_PMIC_devinfo fail\n");
+			break;
+		default:
+			break;
+	}
+}
+#endif /* VENDOR_EDIT */
+
 #define PMIC_PERIPHERAL_TYPE		0x51
 #define PMIC_STRING_MAXLENGTH		80
 static int qpnp_revid_probe(struct platform_device *pdev)
@@ -247,6 +284,10 @@ static int qpnp_revid_probe(struct platform_device *pdev)
 			pmic_subtype, rev1, rev2, rev3, rev4);
 	pr_info("%s options: %d, %d, %d, %d\n",
 			pmic_string, option1, option2, option3, option4);
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@BSP.CHG.Basic, 2017/04/10, sjc Add for PMIC version */
+	register_PMIC_devinfo(revid_chip);
+#endif
 	return 0;
 }
 

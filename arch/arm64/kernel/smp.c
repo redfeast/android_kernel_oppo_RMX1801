@@ -149,7 +149,10 @@ asmlinkage void secondary_start_kernel(void)
 
 	set_my_cpu_offset(per_cpu_offset(smp_processor_id()));
 
+	#ifndef VENDOR_EDIT
+	/* yan.chen@swdp modify it for hypnus module */
 	pr_debug("CPU%u: Booted secondary processor\n", cpu);
+	#endif
 
 	/*
 	 * TTBR0 is only used for the identity mapping at this stage. Make it

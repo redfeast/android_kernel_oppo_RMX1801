@@ -557,10 +557,20 @@ static struct msm_soc_info cpu_of_id[] = {
 	[306] = {MSM_CPU_HAMSTER, "MSMHAMSTER"},
 
 	/* 660 ID */
+#if defined(VENDOR_EDIT) && defined(CONFIG_CONFIDENTIAL_VERSION)
+/*Hui.Fan@BSP.Kernel.Security, 2017-02-12
+ *Obscure the cpu model number in confidential version
+ */
+	[317] = {MSM_CPU_660, "MSM8976"},
+	[324] = {MSM_CPU_660, "MSM8976"},
+	[325] = {MSM_CPU_660, "MSM8976"},
+	[326] = {MSM_CPU_660, "MSM8976"},
+#else
 	[317] = {MSM_CPU_660, "SDM660"},
 	[324] = {MSM_CPU_660, "SDA660"},
 	[325] = {MSM_CPU_660, "SDM658"},
 	[326] = {MSM_CPU_660, "SDA658"},
+#endif /* VENDOR_EDIT */
 
 	/* 630 ID */
 	[318] = {MSM_CPU_630, "SDM630"},

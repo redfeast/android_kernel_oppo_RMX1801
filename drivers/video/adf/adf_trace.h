@@ -88,6 +88,6 @@ TRACE_EVENT(adf_event_disable,
 
 #undef TRACE_INCLUDE_PATH
 #undef TRACE_INCLUDE_FILE
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/video/adf
 #define TRACE_INCLUDE_FILE adf_trace
 #include <trace/define_trace.h>

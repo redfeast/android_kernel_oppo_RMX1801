@@ -190,6 +190,7 @@ struct csiphy_device {
 	struct camera_vreg_t *csiphy_vreg;
 	struct regulator *csiphy_reg_ptr[MAX_REGULATOR];
 	int32_t regulator_count;
+	struct dentry *csiphy_dump;
 };
 
 #define VIDIOC_MSM_CSIPHY_RELEASE \

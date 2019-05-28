@@ -229,6 +229,10 @@ struct dentry_operations {
 #define DCACHE_MAY_FREE			0x00800000
 #define DCACHE_FALLTHRU			0x01000000 /* Fall through to lower layer */
 #define DCACHE_OP_SELECT_INODE		0x02000000 /* Unioned entry: dcache op selects inode */
+#ifdef VENDOR_EDIT
+//Chunyi.Mei@PSW.BSP.FS.F2FS, 2017-11-2, Add for f2fs
+#define DCACHE_ENCRYPTED_WITH_KEY	0x04000000 /* dir is encrypted with a valid key */
+#endif /* VENDOR_EDIT */
 #define DCACHE_OP_REAL			0x08000000
 
 extern seqlock_t rename_lock;

@@ -91,6 +91,50 @@ static ssize_t max_brightness_store(struct device *dev,
 }
 static DEVICE_ATTR_RW(max_brightness);
 
+#ifdef VENDOR_EDIT
+/*Added by Zhengrong.Zhang@Camera.Driver 20170530 start for front fill light*/
+static ssize_t vendor_brightness_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct led_classdev *led_cdev = dev_get_drvdata(dev);
+
+	/* no lock needed for this */
+	led_update_brightness(led_cdev);
+
+	return sprintf(buf, "%u\n", led_cdev->brightness);
+}
+
+static ssize_t vendor_brightness_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t size)
+{
+	struct led_classdev *led_cdev = dev_get_drvdata(dev);
+	unsigned long state;
+	ssize_t ret;
+
+	mutex_lock(&led_cdev->led_access);
+
+	if (led_sysfs_is_disabled(led_cdev)) {
+		ret = -EBUSY;
+		goto unlock;
+	}
+
+	ret = kstrtoul(buf, 10, &state);
+	if (ret)
+		goto unlock;
+
+	if (state == LED_OFF && !(led_cdev->flags & LED_KEEP_TRIGGER))
+		led_trigger_remove(led_cdev);
+	led_set_brightness(led_cdev, state);
+	led_cdev->usr_brightness_req = state;
+
+	ret = size;
+unlock:
+	mutex_unlock(&led_cdev->led_access);
+	return ret;
+}
+static DEVICE_ATTR(vendor_brightness, 0660, vendor_brightness_show, vendor_brightness_store);
+#endif
+
 #ifdef CONFIG_LEDS_TRIGGERS
 static DEVICE_ATTR(trigger, 0644, led_trigger_show, led_trigger_store);
 static struct attribute *led_trigger_attrs[] = {
@@ -105,6 +149,10 @@ static const struct attribute_group led_trigger_group = {
 static struct attribute *led_class_attrs[] = {
 	&dev_attr_brightness.attr,
 	&dev_attr_max_brightness.attr,
+	#ifdef VENDOR_EDIT
+	/*Added by Zhengrong.Zhang@Camera.Driver 20170530 start for front fill light*/
+	&dev_attr_vendor_brightness.attr,
+	#endif
 	NULL,
 };
 

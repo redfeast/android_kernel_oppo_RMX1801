@@ -405,7 +405,12 @@ int mmc_get_ext_csd(struct mmc_card *card, u8 **new_ext_csd)
 	 * As the ext_csd is so large and mostly unused, we don't store the
 	 * raw block in mmc_card.
 	 */
+#ifndef VENDOR_EDIT
+//yh@BSP.Storage.Emmc,2017-06-29,Add for deadlock caused by low memory,case 02990506
 	ext_csd = kzalloc(512, GFP_KERNEL);
+#else
+	ext_csd = kzalloc(512, GFP_NOIO);
+#endif
 	if (!ext_csd)
 		return -ENOMEM;
 

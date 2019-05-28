@@ -138,5 +138,5 @@ DEFINE_EVENT(mhi_msi_template, mhi_msi,
 
 /* This part must be outside protection */
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/platform/msm/mhi
 #include <trace/define_trace.h>

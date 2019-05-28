@@ -705,7 +705,13 @@ static int kill_ok_by_cred(struct task_struct *t)
 	if (uid_eq(cred->euid, tcred->suid) ||
 	    uid_eq(cred->euid, tcred->uid)  ||
 	    uid_eq(cred->uid,  tcred->suid) ||
+	    #ifdef VENDOR_EDIT
+	    // liangkun@Swdp.shanghai 2015/11/18, give permission to system to send specific signal
+	    uid_eq(cred->uid,  tcred->uid)  ||
+	    cred->uid.val == 1000)
+	    #else
 	    uid_eq(cred->uid,  tcred->uid))
+	    #endif
 		return 1;
 
 	if (ns_capable(tcred->user_ns, CAP_KILL))
@@ -985,9 +991,12 @@ static int __send_signal(int sig, struct siginfo *info, struct task_struct *t,
 	int override_rlimit;
 	int ret = 0, result;
 
+
 	assert_spin_locked(&t->sighand->siglock);
 
 	result = TRACE_SIGNAL_IGNORED;
+
+
 	if (!prepare_signal(sig, t,
 			from_ancestor_ns || (info == SEND_SIG_FORCED)))
 		goto ret;

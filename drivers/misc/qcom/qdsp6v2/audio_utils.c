@@ -737,6 +737,14 @@ ssize_t audio_in_read(struct file *file,
 				}
 				bytes_to_copy =
 					(size + audio->out_frame_info[idx][1]);
+                #ifdef VENDOR_EDIT
+                //Wuhan@PSW.MM.MediaServer.Record.1548406, 2018/10/22,
+                //Add for avoid read abnormal buffer which causes media.code crash
+                if (bytes_to_copy == 0) {
+                    rc = 0;
+                    break;
+                }
+                #endif /* VENDOR_EDIT */
 				/* Number of frames information copied */
 				buf += sizeof(unsigned char);
 				count -= sizeof(unsigned char);
@@ -770,8 +778,15 @@ ssize_t audio_in_read(struct file *file,
 
 	pr_debug("%s:session id %d: read: %zd bytes\n", __func__,
 			audio->ac->session, (buf-start));
-	if (buf > start)
-		return buf - start;
+    #ifdef VENDOR_EDIT
+    //Wuhan@PSW.MM.MediaServer.Record.1548406, 2018/10/22,
+    //Add for avoid read abnormal buffer which causes media.code crash
+    if (!rc) {
+        if (buf > start) {
+            return buf - start;
+        }
+    }
+    #endif /* VENDOR_EDIT */
 	return rc;
 }
 

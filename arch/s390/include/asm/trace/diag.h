@@ -16,7 +16,7 @@
 #undef TRACE_INCLUDE_PATH
 #undef TRACE_INCLUDE_FILE
 
-#define TRACE_INCLUDE_PATH asm/trace
+#define TRACE_INCLUDE_PATH ../../arch/s390/include/asm/trace
 #define TRACE_INCLUDE_FILE diag
 
 TRACE_EVENT(s390_diagnose,

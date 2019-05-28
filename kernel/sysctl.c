@@ -129,6 +129,7 @@ static int __maybe_unused three = 3;
 static int __maybe_unused four = 4;
 static unsigned long one_ul = 1;
 static int one_hundred = 100;
+
 #ifdef CONFIG_PRINTK
 static int ten_thousand = 10000;
 #endif
@@ -1889,6 +1890,16 @@ static struct ctl_table vm_table[] = {
 		.mode		= 0644,
 		.proc_handler	= proc_dointvec_minmax,
 	},
+#if defined(VENDOR_EDIT) && defined(CONFIG_PROCESS_RECLAIM)
+//zhoumingjun@Swdp.shanghai, 2017/07/27, force get swap page from fast/slow devices for memory reclaim
+	{
+		.procname	= "swap_force_fast_slow",
+		.data		= &sysctl_swap_force_fast_slow,
+		.maxlen		= sizeof(sysctl_swap_force_fast_slow),
+		.mode		= 0644,
+		.proc_handler	= proc_dointvec_minmax,
+	},
+#endif
 #endif
 	{ }
 };
@@ -2409,6 +2420,18 @@ static int __do_proc_dointvec(void *tbl_data, struct ctl_table *table,
 		*lenp = 0;
 		return 0;
 	}
+
+#ifdef VENDOR_EDIT
+//Jingchun.Wang@bsp.drv, 2017/04/19,
+//add for disable user to write proc printk
+#ifndef CONFIG_OPPO_DAILY_BUILD
+	if((oem_get_uartlog_status() == true) && (table->procname != NULL)) {
+		if((write == 1) && (strncmp(table->procname, "printk", 6) == 0)) {
+			return 0;
+		}
+	}
+#endif
+#endif /*VENDOR_EDIT*/
 	
 	i = (int *) tbl_data;
 	vleft = table->maxlen / sizeof(*i);

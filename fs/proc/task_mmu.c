@@ -1453,6 +1453,18 @@ cont:
 		if (!page)
 			continue;
 
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/03, add ratio in process reclaim
+		if (rp->ratio < 100 && (rp->nr_reclaimed + isolated) * 100 / rp->nr_scanned > rp->ratio) {
+			rp->nr_scanned++;
+			continue;
+		}
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+		if (rp->task && atomic_read(&rp->task->cancel_reclaim) == 1) {
+			break;
+		}
+#endif
+
 		if (isolate_lru_page(page))
 			continue;
 
@@ -1465,6 +1477,15 @@ cont:
 			break;
 	}
 	pte_unmap_unlock(pte - 1, ptl);
+
+
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+	if (rp->task && atomic_read(&rp->task->cancel_reclaim) == 1) {
+		return 0;
+	}
+#endif
+
 	reclaimed = reclaim_pages_from_list(&page_list, vma);
 	rp->nr_reclaimed += reclaimed;
 	rp->nr_to_reclaim -= reclaimed;
@@ -1485,54 +1506,6 @@ enum reclaim_type {
 	RECLAIM_RANGE,
 };
 
-struct reclaim_param reclaim_task_anon(struct task_struct *task,
-		int nr_to_reclaim)
-{
-	struct mm_struct *mm;
-	struct vm_area_struct *vma;
-	struct mm_walk reclaim_walk = {};
-	struct reclaim_param rp;
-
-	rp.nr_reclaimed = 0;
-	rp.nr_scanned = 0;
-	get_task_struct(task);
-	mm = get_task_mm(task);
-	if (!mm)
-		goto out;
-
-	reclaim_walk.mm = mm;
-	reclaim_walk.pmd_entry = reclaim_pte_range;
-
-	rp.nr_to_reclaim = nr_to_reclaim;
-	reclaim_walk.private = &rp;
-
-	down_read(&mm->mmap_sem);
-	for (vma = mm->mmap; vma; vma = vma->vm_next) {
-		if (is_vm_hugetlb_page(vma))
-			continue;
-
-		if (vma->vm_file)
-			continue;
-
-		if (vma->vm_flags & VM_LOCKED)
-			continue;
-
-		if (!rp.nr_to_reclaim)
-			break;
-
-		rp.vma = vma;
-		walk_page_range(vma->vm_start, vma->vm_end,
-			&reclaim_walk);
-	}
-
-	flush_tlb_mm(mm);
-	up_read(&mm->mmap_sem);
-	mmput(mm);
-out:
-	put_task_struct(task);
-	return rp;
-}
-
 static ssize_t reclaim_write(struct file *file, const char __user *buf,
 				size_t count, loff_t *ppos)
 {
@@ -1546,6 +1519,11 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	unsigned long start = 0;
 	unsigned long end = 0;
 	struct reclaim_param rp;
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/03, add ratio in process reclaim
+	char *token;
+	int ratio = 100;
+#endif
 
 	memset(buffer, 0, sizeof(buffer));
 	if (count > sizeof(buffer) - 1)
@@ -1555,19 +1533,34 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		return -EFAULT;
 
 	type_buf = strstrip(buffer);
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/03, add ratio in process reclaim
+	token = strsep(&type_buf, " ");
+	if (!strcmp(token, "file"))
+		type = RECLAIM_FILE;
+	else if (!strcmp(token, "anon"))
+		type = RECLAIM_ANON;
+	else if (!strcmp(token, "all"))
+		type = RECLAIM_ALL;
+	else if (!strcmp(token, "range")) {
+		type = RECLAIM_RANGE;
+	} else
+		goto out_err;
+#else
+	token = strsep(&type_buf, " ");
 	if (!strcmp(type_buf, "file"))
 		type = RECLAIM_FILE;
 	else if (!strcmp(type_buf, "anon"))
 		type = RECLAIM_ANON;
 	else if (!strcmp(type_buf, "all"))
 		type = RECLAIM_ALL;
-	else if (isdigit(*type_buf))
+	else if (!strcmp(type_buf, "range")) {
 		type = RECLAIM_RANGE;
-	else
+	} else
 		goto out_err;
+#endif
 
 	if (type == RECLAIM_RANGE) {
-		char *token;
 		unsigned long long len, len_in, tmp;
 		token = strsep(&type_buf, " ");
 		if (!token)
@@ -1595,10 +1588,27 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 		if (end < start)
 			goto out_err;
 	}
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/03, add ratio in process reclaim
+	else {
+		token = strsep(&type_buf, " ");
+		if (token) {
+			ratio = (int)simple_strtol(token, NULL, 0);
+			if (ratio <= 0 || ratio > 100)
+				goto out_err;
+		}
+	}
+#endif
 
 	task = get_proc_task(file->f_path.dentry->d_inode);
 	if (!task)
 		return -ESRCH;
+
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+	atomic_set(&task->reclaiming, 1);
+	atomic_set(&task->cancel_reclaim, 0);
+#endif
 
 	mm = get_task_mm(task);
 	if (!mm)
@@ -1607,8 +1617,20 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	reclaim_walk.mm = mm;
 	reclaim_walk.pmd_entry = reclaim_pte_range;
 
+#ifdef VENDOR_EDIT
+//zhoumingjun.li@Swdp.shanghai, 2017/04/28, fix reclaim loop variable initialization
+	rp.nr_to_reclaim = ~(unsigned int)0 >> 1;
+#else
 	rp.nr_to_reclaim = ~0;
+#endif
 	rp.nr_reclaimed = 0;
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/03, add ratio in process reclaim
+	rp.nr_scanned = 0;
+	rp.ratio = ratio;
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+	rp.task = task;
+#endif
 	reclaim_walk.private = &rp;
 
 	down_read(&mm->mmap_sem);
@@ -1647,6 +1669,11 @@ static ssize_t reclaim_write(struct file *file, const char __user *buf,
 	up_read(&mm->mmap_sem);
 	mmput(mm);
 out:
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+	atomic_set(&task->reclaiming, 0);
+	atomic_set(&task->cancel_reclaim, 0);
+#endif
 	put_task_struct(task);
 	return count;
 
@@ -1658,6 +1685,90 @@ const struct file_operations proc_reclaim_operations = {
 	.write		= reclaim_write,
 	.llseek		= noop_llseek,
 };
+
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+void proc_reclaim_init_task(struct task_struct *p)
+{
+	atomic_set(&p->reclaiming, 0);
+	atomic_set(&p->cancel_reclaim, 0);
+}
+
+static ssize_t reclaim_cancel_write(struct file *file, const char __user *buf,
+				size_t count, loff_t *ppos)
+{
+	struct task_struct *task;
+	task = get_proc_task(file->f_path.dentry->d_inode);
+	if (!task)
+		return -ESRCH;
+
+	if (atomic_read(&task->reclaiming) == 1) {
+		atomic_set(&task->cancel_reclaim, 1);
+	} else {
+		atomic_set(&task->cancel_reclaim, 0);
+	}
+	put_task_struct(task);
+	return count;
+}
+
+const struct file_operations proc_reclaim_cancel_operations = {
+	.write		= reclaim_cancel_write,
+	.llseek		= noop_llseek,
+};
+#endif
+#endif
+
+#ifdef CONFIG_PROCESS_RECLAIM_VMPRESSURE
+struct reclaim_param reclaim_task_anon(struct task_struct *task,
+		int nr_to_reclaim)
+{
+	struct mm_struct *mm;
+	struct vm_area_struct *vma;
+	struct mm_walk reclaim_walk = {};
+	struct reclaim_param rp;
+
+	rp.nr_reclaimed = 0;
+	rp.nr_scanned = 0;
+	get_task_struct(task);
+	mm = get_task_mm(task);
+	if (!mm)
+		goto out;
+
+	reclaim_walk.mm = mm;
+	reclaim_walk.pmd_entry = reclaim_pte_range;
+
+	rp.nr_to_reclaim = nr_to_reclaim;
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/03, add ratio in process reclaim
+	rp.ratio = 100;
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+	rp.task = task;
+#endif
+	reclaim_walk.private = &rp;
+
+	down_read(&mm->mmap_sem);
+	for (vma = mm->mmap; vma; vma = vma->vm_next) {
+		if (is_vm_hugetlb_page(vma))
+			continue;
+
+		if (vma->vm_file)
+			continue;
+
+		if (!rp.nr_to_reclaim)
+			break;
+
+		rp.vma = vma;
+		walk_page_range(vma->vm_start, vma->vm_end,
+			&reclaim_walk);
+	}
+
+	flush_tlb_mm(mm);
+	up_read(&mm->mmap_sem);
+	mmput(mm);
+out:
+	put_task_struct(task);
+	return rp;
+}
 #endif
 
 #ifdef CONFIG_NUMA

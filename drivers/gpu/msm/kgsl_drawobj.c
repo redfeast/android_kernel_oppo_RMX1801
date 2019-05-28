@@ -167,6 +167,7 @@ static void syncobj_timer(unsigned long data)
 		}
 	}
 
+
 	dev_err(device->dev, "--gpu syncpoint deadlock print end--\n");
 }
 

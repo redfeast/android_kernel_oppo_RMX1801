@@ -1031,6 +1031,31 @@ static unsigned int rpm_vreg_get_bob_mode(struct regulator_dev *rdev)
 	return mode;
 }
 
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@BSP.CHG.Basic, 2017/05/12, sjc Add for BOB noise */
+static unsigned int rpm_vreg_get_bob_optimum_mode(struct regulator_dev *rdev,
+		int input_uV, int output_uV, int load_uA)
+{
+	struct rpm_regulator *reg = rdev_get_drvdata(rdev);
+	u32 mode = REGULATOR_MODE_NORMAL;
+
+	if (reg->hpm_threshold_current > 0) {
+		if (load_uA >= reg->hpm_threshold_current) {
+			/* PWM mode */
+			mode = REGULATOR_MODE_FAST;
+		} else {
+			/* AUTO mode */
+			mode = REGULATOR_MODE_NORMAL;
+		}
+	} else {
+		/* Default to the current mode if no threshold is present. */
+		mode = rpm_vreg_get_bob_mode(rdev);
+	}
+
+	return mode;
+}
+#endif
+
 static unsigned int rpm_vreg_get_optimum_mode(struct regulator_dev *rdev,
 				int input_uV, int output_uV, int load_uA)
 {
@@ -1467,7 +1492,12 @@ static struct regulator_ops bob_ops = {
 	.get_voltage		= rpm_vreg_get_voltage,
 	.set_mode		= rpm_vreg_set_bob_mode,
 	.get_mode		= rpm_vreg_get_bob_mode,
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@BSP.CHG.Basic, 2017/05/12, sjc Add for BOB noise */
+	.get_optimum_mode 	= rpm_vreg_get_bob_optimum_mode,
+#else
 	.get_optimum_mode	= rpm_vreg_get_optimum_mode,
+#endif
 	.enable_time		= rpm_vreg_enable_time,
 };
 
@@ -1775,6 +1805,19 @@ static int rpm_vreg_device_probe(struct platform_device *pdev)
 	}
 
 	of_property_read_u32(node, "qcom,system-load", &reg->system_load);
+
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@BSP.CHG.Basic, 2017/05/12, sjc Add for BOB noise */
+	if (regulator_type == RPM_REGULATOR_TYPE_BOB) {
+		of_property_read_u32(node, "qcom,bob-pwm-threshold-current",
+				&reg->hpm_threshold_current);
+		if (reg->hpm_threshold_current > 0)
+			init_data->constraints.valid_modes_mask
+				= REGULATOR_MODE_FAST | REGULATOR_MODE_NORMAL;
+		pr_err("[%s]: regulator_type = %d, hpm_threshold_current = %d\n",
+			__func__, regulator_type, reg->hpm_threshold_current);
+	}
+#endif
 
 	rc = rpm_vreg_configure_pin_control_enable(reg, node);
 	if (rc) {

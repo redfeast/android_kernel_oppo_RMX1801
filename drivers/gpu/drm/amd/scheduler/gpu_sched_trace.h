@@ -55,5 +55,5 @@ TRACE_EVENT(amd_sched_process_job,
 
 /* This part must be outside protection */
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/gpu/drm/amd/scheduler
 #include <trace/define_trace.h>

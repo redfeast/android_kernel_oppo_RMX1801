@@ -17,9 +17,9 @@
 #include <soc/qcom/camera2.h>
 #include <media/v4l2-subdev.h>
 #include <media/msmb_camera.h>
-#include "msm_camera_i2c.h"
-#include "msm_camera_dt_util.h"
-#include "msm_camera_io_util.h"
+#include "../io/msm_camera_i2c.h"
+#include "../io/msm_camera_dt_util.h"
+#include "../../common/msm_camera_io_util.h"
 
 
 #define DEFINE_MSM_MUTEX(mutexname) \
@@ -108,6 +108,11 @@ struct msm_actuator_ctrl_t {
 	struct msm_camera_gpio_conf *gconf;
 	struct msm_pinctrl_info pinctrl_info;
 	uint8_t cam_pinctrl_status;
+	#ifdef VENDOR_EDIT
+	/*add by hongbo.dai@camera 20170514*/
+	bool firmware_load;
+	bool is_empty_eeprom;
+	#endif
 };
 
 #endif

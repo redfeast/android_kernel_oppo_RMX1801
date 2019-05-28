@@ -454,6 +454,6 @@ DEFINE_EVENT(cxl_pe_class, cxl_slbia,
 
 /* This part must be outside protection */
 #undef TRACE_INCLUDE_PATH
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../drivers/misc/cxl
 #define TRACE_INCLUDE_FILE trace
 #include <trace/define_trace.h>

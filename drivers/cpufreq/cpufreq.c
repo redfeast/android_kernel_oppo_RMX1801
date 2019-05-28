@@ -279,6 +279,14 @@ unsigned int cpufreq_generic_get(unsigned int cpu)
 }
 EXPORT_SYMBOL_GPL(cpufreq_generic_get);
 
+#ifdef VENDOR_EDIT
+struct list_head *get_cpufreq_policy_list(void)
+{
+    return &cpufreq_policy_list;
+}
+EXPORT_SYMBOL(get_cpufreq_policy_list);
+#endif /* VENDOR_EDIT */
+
 /**
  * cpufreq_cpu_get: returns policy for a cpu and marks it busy.
  *
@@ -677,10 +685,25 @@ static ssize_t show_##file_name				\
 }
 
 show_one(cpuinfo_min_freq, cpuinfo.min_freq);
-show_one(cpuinfo_max_freq, cpuinfo.max_freq);
 show_one(cpuinfo_transition_latency, cpuinfo.transition_latency);
+#ifndef VENDOR_EDIT
+show_one(cpuinfo_max_freq, cpuinfo.max_freq);
+#endif
 show_one(scaling_min_freq, min);
 show_one(scaling_max_freq, max);
+
+#ifdef VENDOR_EDIT
+//#cheng.huang@swdp.shanghai.hypnus, 2018/07/30, add for hack subwaysurf power
+static ssize_t show_cpuinfo_max_freq(struct cpufreq_policy *policy, char *buf)
+{
+	if (unlikely(policy->cpu > 3
+		&& (!strcmp(current->comm, "UnityMain")))) {
+		pr_debug("%s Hack 2.2G for %s\n", __func__, current->comm);
+		return sprintf(buf, "%u\n", 2208000);
+	} else
+		return sprintf(buf, "%u\n", policy->cpuinfo.max_freq);
+}
+#endif
 
 static ssize_t show_scaling_cur_freq(struct cpufreq_policy *policy, char *buf)
 {

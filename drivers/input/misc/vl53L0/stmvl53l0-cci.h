@@ -22,10 +22,10 @@
 
 #ifdef CAMERA_CCI
 #include <soc/qcom/camera2.h>
-#include "msm_camera_i2c.h"
-#include "msm_camera_dt_util.h"
-#include "msm_camera_io_util.h"
-#include "msm_cci.h"
+#include "../../../media/platform/msm/camera_v2/sensor/io/msm_camera_i2c.h"
+#include "../../../media/platform/msm/camera_v2/sensor/io/msm_camera_dt_util.h"
+#include "../../../media/platform/msm/camera_v2/common/msm_camera_io_util.h"
+#include "../../../media/platform/msm/camera_v2/sensor/cci/msm_cci.h"
 
 #define	MSM_TOF_MAX_VREGS (10)
 

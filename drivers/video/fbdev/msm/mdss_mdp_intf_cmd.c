@@ -23,6 +23,7 @@
 #include "mdss_dsi_clk.h"
 #include <linux/interrupt.h>
 
+
 #define MAX_RECOVERY_TRIALS 10
 #define MAX_SESSIONS 2
 
@@ -2086,6 +2087,13 @@ static void __clear_ping_pong_callback(struct mdss_mdp_ctl *ctl,
 		mdss_mdp_ctl_notify(ctl, MDP_NOTIFY_FRAME_TIMEOUT);
 }
 
+#ifdef VENDOR_EDIT
+/* Gou shengjun@PSW.MM.Driver.feature, 2018/08/17,
+ *add for fingerprint hbm
+*/
+extern struct completion oppo_dimlayer_hbm_sync_comp;
+#endif /*VENDOR_EDIT*/
+
 static int mdss_mdp_cmd_wait4pingpong(struct mdss_mdp_ctl *ctl, void *arg)
 {
 	struct mdss_mdp_cmd_ctx *ctx;
@@ -2193,6 +2201,14 @@ static int mdss_mdp_cmd_wait4pingpong(struct mdss_mdp_ctl *ctl, void *arg)
 		mdss_mdp_ctl_notify(ctx->ctl, MDP_NOTIFY_FRAME_DONE);
 
 	MDSS_XLOG(ctl->num, atomic_read(&ctx->koff_cnt), rc);
+
+#ifdef VENDOR_EDIT
+/* Gou shengjun@PSW.MM.Driver.feature, 2018/08/17,
+ *add for fingerprint hbm
+*/
+	complete(&oppo_dimlayer_hbm_sync_comp);
+#endif /*VENDOR_EDIT*/
+
 
 	return rc;
 }
@@ -3497,6 +3513,12 @@ panel_events:
 	ctl->ops.reconfigure = NULL;
 	ctl->ops.wait_for_vsync_fnc = NULL;
 
+#ifdef VENDOR_EDIT
+//Shengjun.Gou@PSW.MM.Display.LCD.Feature, 2018/01/03,
+//add for dynamic mipi dsi clk
+	ctl->ops.config_dsitiming_fnc = NULL;
+#endif /*VENDOR_EDIT*/
+
 end:
 	if (!IS_ERR_VALUE(ret)) {
 		struct mdss_mdp_cmd_ctx *sctx = NULL;
@@ -3680,6 +3702,16 @@ static int mdss_mdp_cmd_intfs_setup(struct mdss_mdp_ctl *ctl,
 			return mdss_mdp_cmd_panel_on(ctl, sctl);
 		} else {
 			pr_err("Intf %d already in use\n", session);
+
+#ifdef VENDOR_EDIT
+//Shengjun.Gou@PSW.MM.Display.LCD.Feature, 2018/01/03,
+//add for blank
+			pr_err("Intf %d recovery, ctx ref_cnt: %d, panel state: %d\n",
+					session,ctx->ref_cnt,ctx->panel_power_state);
+			ctx->ref_cnt = 0;
+			mdss_fb_report_panel_dead(ctl->mfd);
+#endif /*VENDOR_EDIT*/
+
 			return -EBUSY;
 		}
 	}
@@ -3825,6 +3857,39 @@ void mdss_mdp_switch_to_vid_mode(struct mdss_mdp_ctl *ctl, int prep)
 			(void *) mode, CTL_INTF_EVENT_FLAG_DEFAULT);
 }
 
+#ifdef VENDOR_EDIT
+//Shengjun.Gou@PSW.MM.Display.LCD.Feature, 2018/01/03,
+//add for dynamic mipi dsi clk
+static int mdss_mdp_cmd_config_dsitiming(struct mdss_mdp_ctl *ctl,
+			struct mdss_mdp_ctl *sctl, u32 bitrate)
+{
+	int rc = 0;
+	struct mdss_panel_data *pdata;
+
+	pdata = ctl->panel_data;
+	if (pdata == NULL) {
+		pr_err("%s: Invalid panel data\n", __func__);
+		return -EINVAL;
+	}
+	if (!pdata->panel_info.dynamic_dsitiming) {
+		pr_err("%s: Dynamic dsi timing not enabled for this panel\n",
+				__func__);
+		return -EINVAL;
+	}
+	if (mdss_mdp_ctl_is_power_off(ctl)) {
+		pr_err("%s:panel is off %d\n", __func__, ctl->power_state);
+		return 0;
+	}
+	rc = mdss_mdp_ctl_intf_event(ctl,
+			MDSS_EVENT_PANEL_UPDATE_DSI_TIMING,
+			(void *) (unsigned long) bitrate,CTL_INTF_EVENT_FLAG_DEFAULT);
+	if (rc)
+		pr_err("%s:intf %d panel dsi timing update error (%d)\n",
+			__func__, ctl->intf_num, rc);
+	return rc;
+}
+#endif /*VENDOR_EDIT*/
+
 static int mdss_mdp_cmd_reconfigure(struct mdss_mdp_ctl *ctl,
 		enum dynamic_switch_modes mode, bool prep)
 {
@@ -3917,6 +3982,13 @@ int mdss_mdp_cmd_start(struct mdss_mdp_ctl *ctl)
 	ctl->ops.update_lineptr = mdss_mdp_cmd_update_lineptr;
 	ctl->ops.panel_disable_cfg = mdss_mdp_cmd_panel_disable_cfg;
 	ctl->ops.wait_for_vsync_fnc = mdss_mdp_cmd_wait4_vsync;
+
+#ifdef VENDOR_EDIT
+//Shengjun.Gou@PSW.MM.Display.LCD.Feature, 2018/01/03,
+//add for dynamic mipi dsi clk
+	ctl->ops.config_dsitiming_fnc = mdss_mdp_cmd_config_dsitiming;
+#endif /*VENDOR_EDIT*/
+
 	pr_debug("%s:-\n", __func__);
 
 	return 0;

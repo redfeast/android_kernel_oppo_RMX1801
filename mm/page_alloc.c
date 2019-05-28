@@ -232,9 +232,7 @@ char * const migratetype_names[MIGRATE_TYPES] = {
 	"CMA",
 #endif
 	"HighAtomic",
-#ifdef CONFIG_MEMORY_ISOLATION
 	"Isolate",
-#endif
 };
 
 compound_page_dtor * const compound_page_dtors[] = {
@@ -2371,6 +2369,7 @@ struct page *buffered_rmqueue(struct zone *preferred_zone,
 			if (page)
 				trace_mm_page_alloc_zone_locked(page, order, migratetype);
 		}
+
 		if (!page && migratetype == MIGRATE_MOVABLE &&
 				gfp_flags & __GFP_CMA)
 			page = __rmqueue_cma(zone, order);

@@ -272,6 +272,7 @@ struct mdss_intf_ulp_clamp {
  *			avr mode passed as argument
  *			0 - disable AVR support
  *			1 - enable AVR support
+ * @MDSS_EVENT_PANEL_UPDATE_DSI_TIMING: Setup DSI clk to new bit clk rate.
  */
 enum mdss_intf_events {
 	MDSS_EVENT_RESET = 1,
@@ -308,6 +309,13 @@ enum mdss_intf_events {
 	MDSS_EVENT_DSI_TIMING_DB_CTRL,
 	MDSS_EVENT_AVR_MODE,
 	MDSS_EVENT_REGISTER_CLAMP_HANDLER,
+
+#ifdef VENDOR_EDIT
+//Shengjun.Gou@PSW.MM.Display.LCD.Feature, 2018/01/03,
+//add for dynamic mipi dsi clk
+	MDSS_EVENT_PANEL_UPDATE_DSI_TIMING,
+#endif /*VENDOR_EDIT*/
+
 	MDSS_EVENT_MAX,
 };
 
@@ -804,6 +812,14 @@ struct mdss_panel_info {
 	int pwm_lpg_chan;
 	int pwm_period;
 	bool dynamic_fps;
+
+#ifdef VENDOR_EDIT
+//Shengjun.Gou@PSW.MM.Display.LCD.Feature, 2018/01/03,
+//add for dynamic mipi dsi clk
+	bool dynamic_dsitiming;
+	u32  cached_clk_rate;
+#endif /*VENDOR_EDIT*/
+
 	bool ulps_feature_enabled;
 	bool ulps_suspend_enabled;
 	bool panel_ack_disabled;

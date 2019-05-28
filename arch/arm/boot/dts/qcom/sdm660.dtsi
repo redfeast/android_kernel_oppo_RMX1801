@@ -854,7 +854,12 @@
 
 		msm_thermal_freq: qcom,vdd-apps-rstr{
 			qcom,vdd-rstr-reg = "vdd-apps";
-			qcom,levels = <1248000>;
+/* #ifdef VENDOR_EDIT
+ * Hui.Fan@SWDP.BSP.Kernel.Driver, 2017-5-11
+ * Update thermal VDD restriction frequency for sdm660
+ */
+			qcom,levels = <1401600>;
+/* #endif */
 			qcom,freq-req;
 		};
 	};
@@ -1576,6 +1581,19 @@
 		reg-names = "rmtfs";
 		qcom,client-id = <0x00000001>;
 	};
+
+    //#ifdef VENDOR_EDIT
+    //Zhengpeng.Tan@NW.AP.NV.892767, 2016/11/30
+    //#ifdef FEATURE_OPPO_NV_BACKUP
+    //add for creating a shared memory with uio for nv backup and restore
+    qcom,oembackup_sharedmem@0 {
+        compatible = "qcom,sharedmem-uio";
+        reg = <0x0 0x00100000>;
+        reg-names = "oembackup";
+        qcom,client-id = <0x00000004>;
+    };
+    //#endif /* FEATURE_OPPO_NV_BACKUP */
+    //#endif /* VENDOR_EDIT */
 
 	qcom,rmnet-ipa {
 		compatible = "qcom,rmnet-ipa";

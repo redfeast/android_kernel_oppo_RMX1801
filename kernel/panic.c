@@ -65,6 +65,20 @@ void __weak panic_smp_self_stop(void)
 		cpu_relax();
 }
 
+#ifdef VENDOR_EDIT //yixue.ge@bsp.drv add for dump cpu contex for minidump
+#ifdef CONFIG_QCOM_COMMON_LOG
+static int in_panic = 0;
+int panic_count(void)
+{
+	return in_panic;
+}
+EXPORT_SYMBOL(panic_count);
+extern void dumpcpuregs(struct pt_regs *pt_regs);
+#else
+void dumpcpuregs(struct pt_regs *pt_regs){}
+#endif /*CONFIG_QCOM_COMMON_LOG*/
+#endif /*VENDOR_EDIT*/
+
 /**
  *	panic - halt the system
  *	@fmt: The text string to print
@@ -81,6 +95,13 @@ void panic(const char *fmt, ...)
 	long i, i_next = 0;
 	int state = 0;
 
+#ifdef VENDOR_EDIT //yixue.ge@bsp.drv add for dump cpu contex for minidump
+#ifdef CONFIG_QCOM_COMMON_LOG
+	in_panic++;
+	dumpcpuregs(NULL);
+
+#endif /*CONFIG_QCOM_COMMON_LOG*/
+#endif /*VENDOR_EDIT*/
 	trace_kernel_panic(0);
 
 	/*

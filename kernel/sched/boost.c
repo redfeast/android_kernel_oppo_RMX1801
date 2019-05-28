@@ -182,6 +182,9 @@ int sched_set_boost(int type)
 	mutex_unlock(&boost_mutex);
 	return ret;
 }
+#ifdef VENDOR_EDIT
+EXPORT_SYMBOL(sched_set_boost);
+#endif /* VENDOR_EDIT */
 
 int sched_boost_handler(struct ctl_table *table, int write,
 		void __user *buffer, size_t *lenp,
@@ -215,3 +218,6 @@ int sched_boost(void)
 {
 	return sysctl_sched_boost;
 }
+#ifdef VENDOR_EDIT
+EXPORT_SYMBOL(sched_boost);
+#endif /* VENDOR_EDIT */

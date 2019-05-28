@@ -588,7 +588,7 @@ static inline pte_t maybe_mkwrite(pte_t pte, struct vm_area_struct *vma)
 }
 
 void do_set_pte(struct vm_area_struct *vma, unsigned long address,
-		struct page *page, pte_t *pte, bool write, bool anon);
+		struct page *page, pte_t *pte, bool write, bool anon, bool old);
 #endif
 
 /*
@@ -1981,7 +1981,12 @@ int write_one_page(struct page *page, int wait);
 void task_dirty_inc(struct task_struct *tsk);
 
 /* readahead.c */
+#ifndef VENDOR_EDIT
+/* Jianchao.Shi@BSP.CHG.Basic, 2017/05/19, sjc Modify for increasing the default max readahead to speed-up reading */
 #define VM_MAX_READAHEAD	128	/* kbytes */
+#else
+#define VM_MAX_READAHEAD	512	/* kbytes */
+#endif
 #define VM_MIN_READAHEAD	16	/* kbytes (includes current page) */
 
 int force_page_cache_readahead(struct address_space *mapping, struct file *filp,
@@ -2348,7 +2353,19 @@ struct reclaim_param {
 	int nr_to_reclaim;
 	/* pages reclaimed */
 	int nr_reclaimed;
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/03, add ratio in process reclaim
+	/* reclaim ration */
+	int ratio;
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+	/* which task is being reclaimed */
+	struct task_struct *task;
+#endif
 };
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+extern void proc_reclaim_init_task(struct task_struct *p);
+#endif
 extern struct reclaim_param reclaim_task_anon(struct task_struct *task,
 		int nr_to_reclaim);
 #endif

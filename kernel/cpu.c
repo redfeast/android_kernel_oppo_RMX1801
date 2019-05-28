@@ -375,8 +375,14 @@ static int _cpu_down(unsigned int cpu, int tasks_frozen)
 	if (err) {
 		nr_calls--;
 		__cpu_notify(CPU_DOWN_FAILED | mod, hcpu, nr_calls, NULL);
+#ifdef VENDOR_EDIT
+		//jie.cheng@swdp.sh,2016/04/26,change printk level to debug
+		pr_debug("%s: attempt to take down CPU %u failed\n",
+				__func__, cpu);
+#else
 		pr_warn("%s: attempt to take down CPU %u failed\n",
 			__func__, cpu);
+#endif /* VENDOR_EDIT */
 		goto out_release;
 	}
 

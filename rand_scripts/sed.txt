@@ -1,0 +1,1 @@
+sed -i "s/^#define *TRACE_INCLUDE_PATH/c\#define TRACE_INCLUDE_PATH ../../PATH" FILE_PATH

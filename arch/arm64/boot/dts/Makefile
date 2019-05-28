@@ -9,7 +9,12 @@ dts-dirs += freescale
 dts-dirs += hisilicon
 dts-dirs += marvell
 dts-dirs += mediatek
-dts-dirs += qcom
+#ifndef VENDOR_EDIT
+#Fuchun.Liao@BSP.CHG.Basic 2017/01/19 modify for 16051/16103 dts
+#dts-dirs += qcom
+#else
+dts-dirs += 18321
+#endif
 dts-dirs += rockchip
 dts-dirs += sprd
 dts-dirs += xilinx

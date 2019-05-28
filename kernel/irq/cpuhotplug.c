@@ -107,9 +107,19 @@ void irq_migrate_all_off_this_cpu(void)
 		affinity_broken = migrate_one_irq(desc);
 		raw_spin_unlock(&desc->lock);
 
+#ifndef VENDOR_EDIT
+// wenbin.liu@BSP.CHG.Basic, 2018/01/08
+// Add for delete log in release version
 		if (affinity_broken)
 			pr_warn_ratelimited("IRQ%u no longer affine to CPU%u\n",
 					    irq, smp_processor_id());
+#else
+#if (defined(CONFIG_OPPO_DAILY_BUILD) || defined(CONFIG_OPPO_SPECIAL_BUILD))
+		if (affinity_broken)
+			pr_warn_ratelimited("IRQ%u no longer affine to CPU%u\n",
+					    irq, smp_processor_id());
+#endif /* only for USR or Aging Version */
+#endif /*VENDOR_EDIT*/
 	}
 
 	local_irq_restore(flags);

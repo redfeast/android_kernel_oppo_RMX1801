@@ -14,7 +14,7 @@
 
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM kvm
-#define TRACE_INCLUDE_PATH .
+#define TRACE_INCLUDE_PATH ../../arch/mips/kvm
 #define TRACE_INCLUDE_FILE trace
 
 /* Tracepoints for VM eists */

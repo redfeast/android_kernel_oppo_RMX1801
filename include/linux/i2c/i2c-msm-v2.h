@@ -465,10 +465,18 @@ struct i2c_msm_resources {
 	struct pinctrl              *pinctrl;
 	struct pinctrl_state        *gpio_state_active;
 	struct pinctrl_state        *gpio_state_suspend;
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@PSW.BSP.CHG.Basic, 2017/10/20, sjc Add for charging */
+	struct pinctrl_state        *gpio_state_pulldown;
+#endif
 };
 
 #define I2C_MSM_PINCTRL_ACTIVE       "i2c_active"
 #define I2C_MSM_PINCTRL_SUSPEND      "i2c_sleep"
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@PSW.BSP.CHG.Basic, 2017/10/20, sjc Add for charging */
+#define I2C_MSM_PINCTRL_PULLDOWN	"i2c_pulldown"
+#endif
 
 /*
  * i2c_msm_xfer_buf: current xfer position and preprocessed tags

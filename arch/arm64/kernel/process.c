@@ -234,6 +234,13 @@ static void show_extra_register_data(struct pt_regs *regs, int nbytes)
 	set_fs(fs);
 }
 
+#ifdef VENDOR_EDIT //yixue.ge@bsp.drv add for dump 
+#ifdef CONFIG_QCOM_COMMON_LOG
+extern void dumpcpuregs(struct pt_regs *pt_regs);
+#else
+void dumpcpuregs(struct pt_regs *pt_regs){}
+#endif
+#endif
 void __show_regs(struct pt_regs *regs)
 {
 	int i, top_reg;
@@ -249,6 +256,9 @@ void __show_regs(struct pt_regs *regs)
 		top_reg = 29;
 	}
 
+#ifdef VENDOR_EDIT //yixue.ge@bsp.drv add for dump 
+	dumpcpuregs(regs);
+#endif
 	show_regs_print_info(KERN_DEFAULT);
 	print_symbol("PC is at %s\n", instruction_pointer(regs));
 	print_symbol("LR is at %s\n", lr);

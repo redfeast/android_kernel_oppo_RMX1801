@@ -120,6 +120,7 @@ static inline u64 __raw_readq_no_log(const volatile void __iomem *addr)
 #define __raw_writeb(v, a)	__raw_write_logged((v), a, b)
 #define __raw_writew(v, a)	__raw_write_logged((v), a, w)
 #define __raw_writel(v, a)	__raw_write_logged((v), a, l)
+
 #define __raw_writeq(v, a)	__raw_write_logged((v), a, q)
 
 #define __raw_read_logged(a, _l, _t)    ({ \
@@ -159,6 +160,7 @@ static inline u64 __raw_readq_no_log(const volatile void __iomem *addr)
 #define writeb_relaxed(v,c)	((void)__raw_writeb((v),(c)))
 #define writew_relaxed(v,c)	((void)__raw_writew((__force u16)cpu_to_le16(v),(c)))
 #define writel_relaxed(v,c)	((void)__raw_writel((__force u32)cpu_to_le32(v),(c)))
+
 #define writeq_relaxed(v,c)	((void)__raw_writeq((__force u64)cpu_to_le64(v),(c)))
 
 #define readb_relaxed_no_log(c)	({ u8 __v = __raw_readb_no_log(c); __v; })
@@ -179,11 +181,13 @@ static inline u64 __raw_readq_no_log(const volatile void __iomem *addr)
 #define readb(c)		({ u8  __v = readb_relaxed(c); __iormb(); __v; })
 #define readw(c)		({ u16 __v = readw_relaxed(c); __iormb(); __v; })
 #define readl(c)		({ u32 __v = readl_relaxed(c); __iormb(); __v; })
+
 #define readq(c)		({ u64 __v = readq_relaxed(c); __iormb(); __v; })
 
 #define writeb(v,c)		({ __iowmb(); writeb_relaxed((v),(c)); })
 #define writew(v,c)		({ __iowmb(); writew_relaxed((v),(c)); })
 #define writel(v,c)		({ __iowmb(); writel_relaxed((v),(c)); })
+
 #define writeq(v,c)		({ __iowmb(); writeq_relaxed((v),(c)); })
 
 #define readb_no_log(c)		({ u8  __v = readb_relaxed_no_log(c); __iormb(); __v; })

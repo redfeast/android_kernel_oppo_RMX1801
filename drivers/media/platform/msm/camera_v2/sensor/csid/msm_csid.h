@@ -115,6 +115,7 @@ struct csid_device {
 	uint32_t csid_sof_debug;
 	uint32_t csid_lane_cnt;
 	uint32_t csid_sof_debug_count;
+	struct dentry *csid_dump;
 };
 
 #define VIDIOC_MSM_CSID_RELEASE \

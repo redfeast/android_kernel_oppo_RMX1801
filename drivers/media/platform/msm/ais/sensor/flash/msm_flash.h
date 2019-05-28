@@ -20,8 +20,8 @@
 #include <media/v4l2-ioctl.h>
 #include <media/ais/msm_ais_sensor.h>
 #include <soc/qcom/ais.h>
-#include "msm_camera_i2c.h"
-#include "msm_sd.h"
+#include "../io/msm_camera_i2c.h"
+#include "../../msm_sd.h"
 
 #define DEFINE_MSM_MUTEX(mutexname) \
 	static struct mutex mutexname = __MUTEX_INITIALIZER(mutexname)

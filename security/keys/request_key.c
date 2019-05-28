@@ -470,6 +470,7 @@ static struct key *construct_key_and_link(struct keyring_search_context *ctx,
 	if (ret)
 		goto error;
 
+
 	user = key_user_lookup(current_fsuid());
 	if (!user) {
 		ret = -ENOMEM;

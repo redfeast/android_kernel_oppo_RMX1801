@@ -995,6 +995,48 @@ static ssize_t max_freq_show(struct device *dev, struct device_attribute *attr,
 }
 static DEVICE_ATTR_RW(max_freq);
 
+#ifdef VENDOR_EDIT
+int devfreq_set_limit(struct devfreq *df, unsigned long min, unsigned long max)
+{
+	int idx;
+	unsigned long chipinfo_min = ~0, chipinfo_max = 0;
+
+	if (!df || !df->profile->freq_table) {
+		pr_err("No devfreq or No table\n");
+		return -EINVAL;
+	}
+
+	if (chipinfo_min > chipinfo_max) {
+		for (idx = 0; idx < df->profile->max_state; idx++) {
+			if (chipinfo_min > df->profile->freq_table[idx])
+				chipinfo_min = df->profile->freq_table[idx];
+			if (chipinfo_max < df->profile->freq_table[idx])
+				chipinfo_max = df->profile->freq_table[idx];
+		}
+	}
+
+	if (min < chipinfo_min)
+		min = chipinfo_min;
+	if (max > chipinfo_max)
+		max = chipinfo_max;
+
+	if (min > max)
+		max = min;
+
+	pr_debug("min %lu max %lu, chip min %lu chip max %lu\n",
+			min, max, chipinfo_min, chipinfo_max);
+
+	mutex_lock(&df->lock);
+	df->min_freq = min;
+	df->max_freq = max;
+	update_devfreq(df);
+	mutex_unlock(&df->lock);
+
+	return 0;
+}
+EXPORT_SYMBOL(devfreq_set_limit);
+#endif /* VENDOR_EDIT */
+
 static ssize_t available_frequencies_show(struct device *d,
 					  struct device_attribute *attr,
 					  char *buf)

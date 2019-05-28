@@ -50,6 +50,11 @@
 #include <asm/uaccess.h>
 
 #include "queue.h"
+#ifdef VENDOR_EDIT
+//Zhilong.Zhang@OnlineRd.Driver, 2013/10/24, Add for eMMC and DDR device information
+#include <soc/oppo/device_info.h>
+#include <soc/oppo/oppo_project.h>
+#endif /* VENDOR_EDIT */
 
 MODULE_ALIAS("mmc:block");
 #ifdef MODULE_PARAM_PREFIX
@@ -1517,6 +1522,10 @@ static int card_busy_detect(struct mmc_card *card, unsigned int timeout_ms,
 	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_ms);
 	int err = 0;
 	u32 status;
+#ifdef VENDOR_EDIT
+//yh@PhoneSW.BSP, 2017-1-17, send card changing to RO mode uevent to android layer
+	char *envp[2] = {"sdcard_ro=1", NULL};
+#endif /* VENDOR_EDIT */
 
 	do {
 		err = get_card_status(card, &status, 5);
@@ -1545,6 +1554,14 @@ static int card_busy_detect(struct mmc_card *card, unsigned int timeout_ms,
 			pr_err("%s: Card stuck in programming state! %s %s\n",
 				mmc_hostname(card->host),
 				req->rq_disk->disk_name, __func__);
+#ifdef VENDOR_EDIT
+//1.yh@bsp, 2015-10-21 Add for special card compatible
+//2.yh@PhoneSW.BSP, 2017-1-17, send card changing to RO mode uevent to android layer
+			kobject_uevent_env(
+					&(card->dev.kobj),
+					KOBJ_CHANGE, envp);
+			card->host->card_stuck_in_programing_status = true;
+#endif /* VENDOR_EDIT */
 			return -ETIMEDOUT;
 		}
 
@@ -3075,7 +3092,7 @@ static struct mmc_cmdq_req *mmc_cmdq_prep_dcmd(
 	struct mmc_cmdq_req *cmdq_req = &mqrq->cmdq_req;
 
 	memset(&mqrq->cmdq_req, 0, sizeof(struct mmc_cmdq_req));
-
+	
 	cmdq_req->mrq.data = NULL;
 	cmdq_req->cmd_flags = req->cmd_flags;
 	cmdq_req->mrq.req = mqrq->req;
@@ -3103,7 +3120,7 @@ static struct mmc_cmdq_req *mmc_blk_cmdq_rw_prep(
 	struct mmc_cmdq_req *cmdq_rq = &mqrq->cmdq_req;
 
 	memset(&mqrq->cmdq_req, 0, sizeof(struct mmc_cmdq_req));
-
+	
 	cmdq_rq->tag = req->tag;
 	if (read_dir) {
 		cmdq_rq->cmdq_req_flags |= DIR;
@@ -3503,6 +3520,7 @@ static void mmc_blk_cmdq_err(struct mmc_queue *mq)
 	struct mmc_request *mrq = host->err_mrq;
 	struct mmc_cmdq_context_info *ctx_info = &host->cmdq_ctx;
 	struct request_queue *q;
+	
 	int err, ret;
 	u32 status = 0;
 
@@ -3547,6 +3565,7 @@ static void mmc_blk_cmdq_err(struct mmc_queue *mq)
 	 * the first error out request and handles all other request in flight
 	 * here.
 	 */
+	 
 	if (test_bit(CMDQ_STATE_REQ_TIMED_OUT, &ctx_info->curr_state)) {
 		err = -ETIMEDOUT;
 	} else if (mrq->data && mrq->data->error) {
@@ -3957,7 +3976,7 @@ static int mmc_blk_cmdq_issue_rq(struct mmc_queue *mq, struct request *req)
 	struct mmc_blk_data *md = mq->data;
 	struct mmc_card *card = md->queue.card;
 	unsigned int cmd_flags = req ? req->cmd_flags : 0;
-
+	
 	mmc_get_card(card);
 
 	if (!card->host->cmdq_ctx.active_reqs && mmc_card_doing_bkops(card)) {
@@ -4625,13 +4644,52 @@ static int mmc_blk_probe(struct mmc_card *card)
 {
 	struct mmc_blk_data *md, *part_md;
 	char cap_str[10];
+	#ifdef VENDOR_EDIT
+	//Zhilong.Zhang@OnlineRd.Driver, 2013/10/24, Add for eMMC and DDR device information
+	char * manufacturerid;
+    static char temp_version[10];
+	#endif /* VENDOR_EDIT */
 
 	/*
 	 * Check that the card supports the command class(es) we need.
 	 */
+#ifndef VENDOR_EDIT
+//yh@bsp, 2015/08/03, remove for can not initialize specific sdcard(CSD info mismatch card real capability)
 	if (!(card->csd.cmdclass & CCC_BLOCK_READ))
 		return -ENODEV;
+#endif
 
+#ifdef VENDOR_EDIT
+//Zhilong.Zhang@OnlineRd.Driver, 2013/10/24, Add for eMMC and DDR device information
+	switch (card->cid.manfid) {
+		case  0x11:
+			manufacturerid = "TOSHIBA";
+			break;
+		case  0x13:
+			manufacturerid = "MICRON";
+			break;	
+		case  0x15:
+				manufacturerid = "SAMSUNG";
+			break;
+		case  0x45:
+			manufacturerid = "SANDISK";
+			break;
+		case  0x90:
+			manufacturerid = "HYNIX";
+			break;
+		case 0xFE:
+            manufacturerid = "ELPIDA";
+            break;
+                default:
+			manufacturerid = "unknown";
+			break;
+	}
+	if (!strcmp(mmc_card_id(card), "mmc0:0001")) {
+		sprintf(temp_version,"0x%02x,0x%llx",card->cid.prv,*(unsigned long long*)card->ext_csd.fwrev);
+		register_device_proc("emmc", mmc_card_name(card), manufacturerid);
+		register_device_proc("emmc_version", mmc_card_name(card), temp_version);
+	}
+#endif /* VENDOR_EDIT */
 	mmc_fixup_device(card, blk_fixups);
 
 	md = mmc_blk_alloc(card);

@@ -289,6 +289,10 @@ struct fg_batt_props {
 	int		float_volt_uv;
 	int		vbatt_full_mv;
 	int		fastchg_curr_ma;
+#ifdef VENDOR_EDIT
+/* Ji.Xu PSW.BSP.CHG  2018-07-13  Add for anthenticate battery */
+	int		batt_id;
+#endif
 };
 
 struct fg_cyc_ctr_data {
@@ -372,6 +376,15 @@ static const struct fg_pt fg_tsmc_osc_table[] = {
 	{  90,		444992 },
 };
 
+#ifdef VENDOR_EDIT
+/* Ji.Xu PSW.BSP.CHG  2018-07-13  Add for anthenticate battery */
+enum oppo_battery_type {
+	NON_STD_BATT = 0,
+	OPPO_ATL_BATT,
+	OPPO_SDI_BATT,
+};
+#endif
+
 struct fg_chip {
 	struct device		*dev;
 	struct pmic_revid_data	*pmic_rev_id;
@@ -422,6 +435,11 @@ struct fg_chip {
 	int			last_msoc;
 	int			last_recharge_volt_mv;
 	int			esr_timer_charging_default[NUM_ESR_TIMERS];
+#ifdef VENDOR_EDIT
+/* Ji.Xu PSW.BSP.CHG  2018-07-13  Add for anthenticate battery */
+	int			oppo_battery_type;
+	bool			profile_not_available;
+#endif
 	enum slope_limit_status	slope_limit_sts;
 	bool			profile_available;
 	bool			profile_loaded;
@@ -441,6 +459,15 @@ struct fg_chip {
 	struct work_struct	status_change_work;
 	struct delayed_work	ttf_work;
 	struct delayed_work	sram_dump_work;
+
+#ifdef VENDOR_EDIT
+/* Ji.Xu PSW.BSP.CHG  2018-07-23  Save battery capacity to persist partition */
+    int				batt_info[6];
+    int				batt_info_id;
+    bool			*batt_range_ocv;
+    int				*batt_range_pct;
+#endif
+
 };
 
 /* Debugfs data structures are below */

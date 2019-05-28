@@ -427,3 +427,15 @@ obj-$(CONFIG_SND_SOC_MAX9877)	+= snd-soc-max9877.o
 obj-$(CONFIG_SND_SOC_TPA6130A2)	+= snd-soc-tpa6130a2.o
 obj-y += sdm660_cdc/
 obj-y += msm_sdw/
+
+#ifdef VENDOR_EDIT
+#xiang.fei@PSW.MM.AudioDriver.SmartPA, 2017/01/13, Add for nxp speaker
+obj-y += tfa98xx/
+#endif /* VENDOR_EDIT */
+
+#ifdef VENDOR_EDIT
+#Jianfeng.Qiu@PSW.MM.AudioDriver.OpCustomized, 2018/01/18, Add for ct test
+ifneq ($(filter cttest allnetcttest allnetctfield,$(NET_BUILD_TYPE)),)
+KBUILD_CFLAGS += -DOPPO_AUDIO_CTTEST
+endif
+#endif /* VENDOR_EDIT */

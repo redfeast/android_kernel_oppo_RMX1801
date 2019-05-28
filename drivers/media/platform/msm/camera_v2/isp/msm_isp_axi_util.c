@@ -1,4 +1,4 @@
-/* Copyright (c) 2013-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2013-2017, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -877,8 +877,14 @@ void msm_isp_increment_frame_id(struct vfe_device *vfe_dev,
 			 */
 			if (ms_res->src_sof_mask & (1 <<
 				src_info->dual_hw_ms_info.index)) {
+#ifndef VENDOR_EDIT
+/* Modify by LiuBin at 20170504 for [lower the log level] */
 				pr_err_ratelimited("Frame out of sync on vfe %d\n",
 					vfe_dev->pdev->id);
+#else
+				ISP_DBG("Frame out of sync on vfe %d\n",
+					vfe_dev->pdev->id);
+#endif
 				/*
 				 * set this isp as async mode to force
 				 *it sync again at the next sof
@@ -2483,18 +2489,38 @@ int msm_isp_ab_ib_update_lpm_mode(struct vfe_device *vfe_dev, void *arg)
 		rc = -1;
 		return rc;
 	}
+	#ifndef VENDOR_EDIT
+	/*modified by yujun.hou@Camera 20171101 for lpm*/
 	if (ab_ib_vote->num_src >= VFE_AXI_SRC_MAX) {
 		pr_err("%s: ab_ib_vote num_src is exceeding limit\n",
 			__func__);
 		rc = -1;
 		return rc;
 	}
+	#else
+	if (ab_ib_vote->num_src > VFE_AXI_SRC_MAX) {
+		pr_err("%s: ab_ib_vote num_src is exceeding limit\n",
+			__func__);
+		rc = -1;
+		return rc;
+	}
+	#endif
+	#ifndef VENDOR_EDIT
+	/*modified by yujun.hou@Camera 20171101 for lpm*/
 	if (ab_ib_vote->num_src >= VFE_AXI_SRC_MAX) {
 		pr_err("%s: ab_ib_vote num_src is exceeding limit\n",
 			__func__);
 		rc = -1;
 		return rc;
 	}
+	#else
+	if (ab_ib_vote->num_src > VFE_AXI_SRC_MAX) {
+		pr_err("%s: ab_ib_vote num_src is exceeding limit\n",
+			__func__);
+		rc = -1;
+		return rc;
+	}
+	#endif
 	if (ab_ib_vote->lpm_mode) {
 		for (i = 0; i < ab_ib_vote->num_src; i++) {
 			stream_info =
@@ -3967,12 +3993,10 @@ int msm_isp_update_axi_stream(struct vfe_device *vfe_dev, void *arg)
 				&update_cmd->update_info[i];
 			stream_info = msm_isp_get_stream_common_data(vfe_dev,
 				HANDLE_TO_IDX(update_info->stream_handle));
-			mutex_lock(&vfe_dev->buf_mgr->lock);
 			rc = msm_isp_request_frame(vfe_dev, stream_info,
 				update_info->user_stream_id,
 				update_info->frame_id,
 				MSM_ISP_INVALID_BUF_INDEX);
-			mutex_unlock(&vfe_dev->buf_mgr->lock);
 			if (rc)
 				pr_err("%s failed to request frame!\n",
 					__func__);
@@ -4018,12 +4042,10 @@ int msm_isp_update_axi_stream(struct vfe_device *vfe_dev, void *arg)
 			rc = -EINVAL;
 			break;
 		}
-		mutex_lock(&vfe_dev->buf_mgr->lock);
 		rc = msm_isp_request_frame(vfe_dev, stream_info,
 			req_frm->user_stream_id,
 			req_frm->frame_id,
 			req_frm->buf_index);
-		mutex_unlock(&vfe_dev->buf_mgr->lock);
 		if (rc)
 			pr_err("%s failed to request frame!\n",
 				__func__);

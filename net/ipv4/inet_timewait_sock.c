@@ -197,6 +197,7 @@ struct inet_timewait_sock *inet_twsk_alloc(const struct sock *sk,
 		atomic_set(&tw->tw_refcnt, 0);
 
 		__module_get(tw->tw_prot->owner);
+
 	}
 
 	return tw;

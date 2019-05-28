@@ -27,6 +27,11 @@
 #include <linux/notifier.h>
 #include <linux/suspend.h>
 
+#ifdef VENDOR_EDIT
+//Wenxian.Zhen@BSP.Power.Basic, 2016/07/19, add for analysis power consumption
+#include <linux/notifier.h>
+#include <linux/fb.h>
+#endif /* VENDOR_EDIT */
 
 #define MAX_WAKEUP_REASON_IRQS 32
 static int irq_list[MAX_WAKEUP_REASON_IRQS];
@@ -64,6 +69,54 @@ static ssize_t last_resume_reason_show(struct kobject *kobj, struct kobj_attribu
 	return buf_offset;
 }
 
+#ifdef VENDOR_EDIT
+//Wenxian.zhen@Prd.BaseDrv, 2016/07/19, add for analysis power consumption
+extern u64 	alarm_count;
+extern u64	wakeup_source_count_rtc;
+extern u64	wakeup_source_count_wifi;
+extern u64	wakeup_source_count_modem;
+extern u64  wakeup_source_count_kpdpwr;
+extern u64  wakeup_source_count_sps;
+extern u64 	wakeup_source_count_adsp;
+
+static ssize_t ap_resume_reason_stastics_show(struct kobject *kobj, struct kobj_attribute *attr,
+		char *buf)
+{			
+	int buf_offset = 0;		
+	
+	buf_offset += sprintf(buf + buf_offset, "wcnss_wlan");		
+	buf_offset += sprintf(buf + buf_offset,  "%s",":");
+	buf_offset += sprintf(buf + buf_offset,  "%lld \n",wakeup_source_count_wifi);
+	printk(KERN_WARNING "%s wakeup %lld times\n","wcnss_wlan",wakeup_source_count_wifi);
+
+	buf_offset += sprintf(buf + buf_offset, "modem");		
+	buf_offset += sprintf(buf + buf_offset,  "%s",":");
+	buf_offset += sprintf(buf + buf_offset,  "%lld \n",wakeup_source_count_modem);
+	printk(KERN_WARNING "%s wakeup %lld times\n","qcom,smd-modem",wakeup_source_count_modem);
+	
+	buf_offset += sprintf(buf + buf_offset, "qpnp_rtc_alarm");		
+	buf_offset += sprintf(buf + buf_offset,  "%s",":");
+	buf_offset += sprintf(buf + buf_offset,  "%lld \n",wakeup_source_count_rtc);
+	printk(KERN_WARNING "%s wakeup %lld times\n","qpnp_rtc_alarm",wakeup_source_count_rtc);
+	
+	buf_offset += sprintf(buf + buf_offset, "power_key");		
+	buf_offset += sprintf(buf + buf_offset,  "%s",":");
+	buf_offset += sprintf(buf + buf_offset,  "%lld \n",wakeup_source_count_kpdpwr);
+	printk(KERN_WARNING "%s wakeup %lld times\n","power_key",wakeup_source_count_kpdpwr);
+
+	buf_offset += sprintf(buf + buf_offset, "sps");		
+	buf_offset += sprintf(buf + buf_offset,  "%s",":");
+	buf_offset += sprintf(buf + buf_offset,  "%lld \n",wakeup_source_count_sps);
+	printk(KERN_WARNING "%s wakeup %lld times\n","sps",wakeup_source_count_sps);
+
+	buf_offset += sprintf(buf + buf_offset, "adsp");		
+	buf_offset += sprintf(buf + buf_offset,  "%s",":");
+	buf_offset += sprintf(buf + buf_offset,  "%lld \n",wakeup_source_count_adsp);
+	printk(KERN_WARNING "%s wakeup %lld times\n","adsp",wakeup_source_count_adsp);
+	return buf_offset;
+}
+#endif /* VENDOR_EDIT */
+
 static ssize_t last_suspend_time_show(struct kobject *kobj,
 			struct kobj_attribute *attr, char *buf)
 {
@@ -94,10 +147,17 @@ static ssize_t last_suspend_time_show(struct kobject *kobj,
 
 static struct kobj_attribute resume_reason = __ATTR_RO(last_resume_reason);
 static struct kobj_attribute suspend_time = __ATTR_RO(last_suspend_time);
-
+#ifdef VENDOR_EDIT
+//Wenxian.Zhen@BSP.Power.Basic, 2016/04/15, Add for wake up source
+static struct kobj_attribute ap_resume_reason_stastics = __ATTR_RO(ap_resume_reason_stastics);
+#endif /* VENDOR_EDIT */
 static struct attribute *attrs[] = {
 	&resume_reason.attr,
 	&suspend_time.attr,
+#ifdef VENDOR_EDIT
+//Wenxian.Zhen@BSP.Power.Basic, 2016/04/15, Add for wake up source
+	&ap_resume_reason_stastics.attr,
+#endif /* VENDOR_EDIT */
 	NULL,
 };
 static struct attribute_group attr_group = {
@@ -194,6 +254,65 @@ static int wakeup_reason_pm_event(struct notifier_block *notifier,
 static struct notifier_block wakeup_reason_pm_notifier_block = {
 	.notifier_call = wakeup_reason_pm_event,
 };
+#ifdef VENDOR_EDIT
+//Wenxian.Zhen@BSP.Power.Basic, 2016/07/19, add for analysis power consumption
+static void wakeup_reason_count_clear(void)
+{
+    printk(KERN_INFO  "ENTER %s\n", __func__);
+	alarm_count = 0;
+	wakeup_source_count_rtc = 0;
+	wakeup_source_count_wifi = 0;
+	wakeup_source_count_modem = 0;
+	wakeup_source_count_kpdpwr = 0;
+	wakeup_source_count_sps = 0;
+	wakeup_source_count_adsp = 0;
+}
+
+static void wakeup_reason_count_out(void)
+{
+	printk(KERN_INFO   "%s wakeup %lld times\n","wcnss_wlan",wakeup_source_count_wifi);
+	printk(KERN_INFO   "%s wakeup %lld times\n","qcom,smd-modem",wakeup_source_count_modem);
+	printk(KERN_INFO   "%s wakeup %lld times\n","qpnp_rtc_alarm",wakeup_source_count_rtc);	
+	printk(KERN_INFO   "%s wakeup %lld times\n","power_key",wakeup_source_count_kpdpwr);
+	printk(KERN_INFO   "%s wakeup %lld times\n","sps",wakeup_source_count_sps);
+	printk(KERN_INFO   "%s wakeup %lld times\n","adsp",wakeup_source_count_adsp);
+	printk(KERN_INFO  "ENTER %s\n", __func__);	
+}
+
+void wakeup_src_clean(void)
+{
+	wakeup_reason_count_clear();
+}
+
+static int wakeup_src_fb_notifier_callback(struct notifier_block *self,
+				 unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int *blank;
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		blank = evdata->data;
+		if (*blank == FB_BLANK_UNBLANK)
+        {
+			wakeup_reason_count_out();
+		}
+	}
+    else if (evdata && evdata->data && event == FB_EARLY_EVENT_BLANK) {
+			blank = evdata->data;
+			if (*blank == FB_BLANK_POWERDOWN) {
+				wakeup_src_clean();
+				pr_err("[wakeup_src_fb_notifier_callback] wakeup_src_clean all wakeup\n");
+			}
+
+    }
+	
+	return 0;
+}
+
+static struct notifier_block wakeup_src_fb_notif = {
+	.notifier_call = wakeup_src_fb_notifier_callback,
+};
+#endif /* VENDOR_EDIT */
 
 /* Initializes the sysfs parameter
  * registers the pm_event notifier
@@ -219,6 +338,10 @@ int __init wakeup_reason_init(void)
 		printk(KERN_WARNING "[%s] failed to create a sysfs group %d\n",
 				__func__, retval);
 	}
+#ifdef VENDOR_EDIT
+//Wenxian.zhen@Prd.BaseDrv, 2016/07/19, add for analysis power consumption
+	fb_register_client(&wakeup_src_fb_notif);
+#endif /* VENDOR_EDIT */
 	return 0;
 }
 

@@ -816,6 +816,7 @@ void do_exit(long code)
 
 	validate_creds_for_do_exit(tsk);
 
+
 	check_stack_usage();
 	preempt_disable();
 	if (tsk->nr_dirtied)

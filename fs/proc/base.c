@@ -135,6 +135,15 @@ struct pid_entry {
 		NULL, &proc_single_file_operations,	\
 		{ .proc_show = show } )
 
+#ifdef VENDOR_EDIT
+//liangkun@Swdp.shanghai,2016/07/25 give read oom_adj permission to system process
+/* ANDROID is for special files in /proc. */
+#define ANDROID(NAME, MODE, OTYPE)			\
+	NOD(NAME, (S_IFREG|(MODE)),			\
+		&proc_##OTYPE##_inode_operations,	\
+		&proc_##OTYPE##_operations, {})
+#endif
+
 /*
  * Count the number of hardlinks for the pid_entry table, excluding the .
  * and .. links.
@@ -1125,6 +1134,28 @@ err_task_lock:
 out:
 	return err < 0 ? err : count;
 }
+
+#ifdef VENDOR_EDIT
+//liangkun@Swdp.shanghai,2016/07/25 give read oom_adj permission to system process
+static int oom_adjust_permission(struct inode *inode, int mask)
+{
+	/*
+	 * System Server (uid == 1000) is granted access to oom_adj
+	 */
+	if (current_fsuid().val == 1000) {
+		if (inode->i_mode >> 6 & mask) {
+			return 0;
+		}
+	}
+
+	/* Fall back to default. */
+	return generic_permission(inode, mask);
+}
+
+static const struct inode_operations proc_oom_adj_inode_operations = {
+	.permission	= oom_adjust_permission,
+};
+#endif
 
 static const struct file_operations proc_oom_adj_operations = {
 	.read		= oom_adj_read,
@@ -3060,7 +3091,14 @@ static const struct pid_entry tgid_base_stuff[] = {
 	REG("mountinfo",  S_IRUGO, proc_mountinfo_operations),
 	REG("mountstats", S_IRUSR, proc_mountstats_operations),
 #ifdef CONFIG_PROCESS_RECLAIM
-	REG("reclaim", S_IWUSR, proc_reclaim_operations),
+#ifdef VENDOR_EDIT
+//fangpan@Swdp.shanghai,2017/07/1 give system uid write permission for reclaim
+	REG("reclaim", S_IWUSR | S_IWGRP | S_IWOTH, proc_reclaim_operations),
+#endif
+#ifdef VENDOR_EDIT
+//zhoumingjun@Swdp.shanghai, 2017/08/08, add interface to cancel process reclaim
+	REG("reclaim_cancel", S_IWUSR, proc_reclaim_cancel_operations),
+#endif
 #endif
 #ifdef CONFIG_PROC_PAGE_MONITOR
 	REG("clear_refs", S_IWUSR, proc_clear_refs_operations),
@@ -3089,7 +3127,12 @@ static const struct pid_entry tgid_base_stuff[] = {
 	ONE("cgroup",  S_IRUGO, proc_cgroup_show),
 #endif
 	ONE("oom_score",  S_IRUGO, proc_oom_score),
+#ifdef VENDOR_EDIT
+//liangkun@Swdp.shanghai,2016/07/25 give read oom_adj permission to system process
+	ANDROID("oom_adj", S_IRUSR|S_IRGRP, oom_adj),
+#else
 	REG("oom_adj",    S_IRUSR, proc_oom_adj_operations),
+#endif
 	REG("oom_score_adj", S_IRUSR, proc_oom_score_adj_operations),
 #ifdef CONFIG_AUDITSYSCALL
 	REG("loginuid",   S_IWUSR|S_IRUGO, proc_loginuid_operations),
@@ -3480,7 +3523,12 @@ static const struct pid_entry tid_base_stuff[] = {
 	ONE("cgroup",  S_IRUGO, proc_cgroup_show),
 #endif
 	ONE("oom_score", S_IRUGO, proc_oom_score),
+#ifdef VENDOR_EDIT
+//liangkun@Swdp.shanghai,2016/07/25 give read oom_adj permission to system process
+	REG("oom_adj",   S_IRUSR|S_IRGRP, proc_oom_adj_operations),
+#else
 	REG("oom_adj",   S_IRUSR, proc_oom_adj_operations),
+#endif
 	REG("oom_score_adj", S_IRUSR, proc_oom_score_adj_operations),
 #ifdef CONFIG_AUDITSYSCALL
 	REG("loginuid",  S_IWUSR|S_IRUGO, proc_loginuid_operations),
