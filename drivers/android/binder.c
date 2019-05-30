@@ -3305,7 +3305,6 @@ static void binder_transaction(struct binder_proc *proc,
 	 */
 	smp_wmb();
 	WRITE_ONCE(e->debug_id_done, t_debug_id);
-
 	return;
 
 err_dead_proc_or_thread:
