@@ -1,4 +1,4 @@
-/* Copyright (c) 2008-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2008-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -812,9 +812,10 @@ struct mdss_panel_info {
 	int pwm_lpg_chan;
 	int pwm_period;
 	bool dynamic_fps;
-
+	bool dynamic_bitclk;
+	u32 *supp_bitclks;
+	u32 supp_bitclk_len;
 #ifdef VENDOR_EDIT
-//Shengjun.Gou@PSW.MM.Display.LCD.Feature, 2018/01/03,
 //add for dynamic mipi dsi clk
 	bool dynamic_dsitiming;
 	u32  cached_clk_rate;

@@ -1,4 +1,4 @@
-/* Copyright (c) 2014-2017, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2014-2018, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -216,7 +216,6 @@ struct edge_info {
 	struct task_struct *task;
 	#ifndef VENDOR_EDIT
 	//Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
-	struct tasklet_struct tasklet;
 	#endif /* VENDOR_EDIT */
 	struct srcu_struct use_ref;
 	bool in_ssr;
@@ -1189,19 +1188,7 @@ static void __rx_worker(struct edge_info *einfo, bool atomic_ctx)
 #ifndef VENDOR_EDIT
 //Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
 /**
- * rx_worker_atomic() - worker function to process received command in atomic
- *			context.
- * @param:	The param parameter passed during initialization of the tasklet.
- */
-static void rx_worker_atomic(unsigned long param)
-{
-	struct edge_info *einfo = (struct edge_info *)param;
-
-	__rx_worker(einfo, true);
-}
 #endif /* VENDOR_EDIT */
-
-/**
  * rx_worker() - worker function to process received commands
  * @work:	kwork associated with the edge to process commands on.
  */
@@ -1222,7 +1209,6 @@ irqreturn_t irq_handler(int irq, void *priv)
 
 #ifndef VENDOR_EDIT
 //Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Modify for CR 2225619, audio play more efficient
-	tasklet_hi_schedule(&einfo->tasklet);
 #else /* VENDOR_EDIT */
     __rx_worker(einfo, true);
 #endif /* VENDOR_EDIT */
@@ -2359,7 +2345,6 @@ static int glink_smem_native_probe(struct platform_device *pdev)
 	init_kthread_worker(&einfo->kworker);
 	#ifndef VENDOR_EDIT
 	//Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
-	tasklet_init(&einfo->tasklet, rx_worker_atomic, (unsigned long)einfo);
 	#endif /* VENDOR_EDIT */
 	einfo->read_from_fifo = read_from_fifo;
 	einfo->write_to_fifo = write_to_fifo;
@@ -2465,7 +2450,6 @@ smem_alloc_fail:
 	einfo->task = NULL;
 	#ifndef VENDOR_EDIT
 	//Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
-	tasklet_kill(&einfo->tasklet);
 	#endif /* VENDOR_EDIT */
 kthread_fail:
 	iounmap(einfo->out_irq_reg);
@@ -2554,7 +2538,6 @@ static int glink_rpm_native_probe(struct platform_device *pdev)
 	init_kthread_worker(&einfo->kworker);
 	#ifndef VENDOR_EDIT
 	//Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
-	tasklet_init(&einfo->tasklet, rx_worker_atomic, (unsigned long)einfo);
 	#endif /* VENDOR_EDIT */
 	einfo->intentless = true;
 	einfo->read_from_fifo = memcpy32_fromio;
@@ -2719,7 +2702,6 @@ toc_init_fail:
 	einfo->task = NULL;
 	#ifndef VENDOR_EDIT
 	//Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
-	tasklet_kill(&einfo->tasklet);
 	#endif /* VENDOR_EDIT */
 kthread_fail:
 	iounmap(msgram);
@@ -2851,7 +2833,6 @@ static int glink_mailbox_probe(struct platform_device *pdev)
 	init_kthread_worker(&einfo->kworker);
 	#ifndef VENDOR_EDIT
 	//Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
-	tasklet_init(&einfo->tasklet, rx_worker_atomic, (unsigned long)einfo);
 	#endif /* VENDOR_EDIT */
 	einfo->read_from_fifo = read_from_fifo;
 	einfo->write_to_fifo = write_to_fifo;
@@ -2976,7 +2957,6 @@ smem_alloc_fail:
 	einfo->task = NULL;
 	#ifndef VENDOR_EDIT
 	//Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
-	tasklet_kill(&einfo->tasklet);
 	#endif /* VENDOR_EDIT */
 kthread_fail:
 	iounmap(einfo->rx_reset_reg);
