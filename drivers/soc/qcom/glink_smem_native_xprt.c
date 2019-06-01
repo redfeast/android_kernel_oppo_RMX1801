@@ -1185,13 +1185,13 @@ static void __rx_worker(struct edge_info *einfo, bool atomic_ctx)
 	srcu_read_unlock(&einfo->use_ref, rcu_id);
 }
 
-#ifndef VENDOR_EDIT
+//#ifndef VENDOR_EDIT
 //Hongbo.Dong@MultiMedia.AudioServer.Framework, 2018/10/16, Remove for CR 2225619, audio play more efficient
 /**
-#endif /* VENDOR_EDIT */
- * rx_worker() - worker function to process received commands
- * @work:	kwork associated with the edge to process commands on.
- */
+* #endif  VENDOR_EDIT 
+* rx_worker() - worker function to process received commands
+* @work:	kwork associated with the edge to process commands on.
+*/
 static void rx_worker(struct kthread_work *work)
 {
 	struct edge_info *einfo;
