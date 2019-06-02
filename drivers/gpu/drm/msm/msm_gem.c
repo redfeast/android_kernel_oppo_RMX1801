@@ -245,7 +245,6 @@ static struct page **get_pages(struct drm_gem_object *obj)
 			msm_obj->sgt = NULL;
 			return ptr;
 		}
-
 		/*
 		 * Make sure to flush the CPU cache for newly allocated memory
 		 * so we don't get ourselves into trouble with a dirty cache
@@ -295,7 +294,10 @@ static void put_pages(struct drm_gem_object *obj)
 		}
 
 		if (msm_obj->sgt)
+
+		if (msm_obj->sgt)
 			sg_free_table(msm_obj->sgt);
+
 		kfree(msm_obj->sgt);
 
 		if (use_pages(obj)) {
