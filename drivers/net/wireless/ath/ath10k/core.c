@@ -2018,7 +2018,6 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
 			goto err_hif_stop;
 		}
 	}
-
 	status = ath10k_htt_rx_ring_refill(ar);
 	if (status) {
 		ath10k_err(ar, "failed to refill htt rx ring: %d\n", status);
