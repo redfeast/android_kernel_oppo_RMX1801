@@ -31,6 +31,7 @@
 #include <linux/usb/audio-v3.h>
 
 #include "usbaudio.h"
+
 #include "card.h"
 #include "helper.h"
 #include "pcm.h"

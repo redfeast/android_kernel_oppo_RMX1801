@@ -1962,11 +1962,6 @@ static int __usbnet_write_cmd(struct usbnet *dev, u8 cmd, u8 reqtype,
 out:
 	return err;
 }
-
-		if ((buflen < elength) || (elength < 3)) {
-			dev_err(&intf->dev, "invalid descriptor buffer length\n");
-			break;
-		}
 /*
  * The function can't be called inside suspend/resume callback,
  * otherwise deadlock will be caused.
