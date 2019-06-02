@@ -2123,6 +2123,9 @@ static void __composite_unbind(struct usb_gadget *gadget, bool unbind_driver)
 
 	if (dev_str[USB_GADGET_MANUFACTURER_IDX].s == cdev->def_manufacturer)
 		dev_str[USB_GADGET_MANUFACTURER_IDX].s = "";
+
+	if (dev_str[USB_GADGET_MANUFACTURER_IDX].s == cdev->def_manufacturer)
+		dev_str[USB_GADGET_MANUFACTURER_IDX].s = "";
 	
 	kfree(cdev->def_manufacturer);
 	kfree(cdev);
