@@ -798,6 +798,10 @@ struct ath10k {
 	const struct ath10k_fw_components *running_fw;
 
 	const struct firmware *pre_cal_file;
+
+		/* Number of bytes used for alignment in rx_hdr_status */
+		int decap_align_bytes;
+
 	const struct firmware *cal_file;
 
 	struct {
