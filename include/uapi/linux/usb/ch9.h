@@ -898,17 +898,22 @@ struct usb_ssp_cap_descriptor {
 } __attribute__((packed));
 
 /*
- * Configuration Summary descriptors: Defines a list of functions in the
- * configuration. This descriptor may be used by Host software to decide
- * which Configuration to use to obtain the desired functionality.
+ * Precision time measurement capability descriptor: advertised by devices and
+ * hubs that support PTM
  */
-#define	USB_CAP_TYPE_CONFIG_SUMMARY	0x10
+#define	USB_PTM_CAP_TYPE	0xb
+struct usb_ptm_cap_descriptor {
+	__u8  bLength;
+	__u8  bDescriptorType;
+	__u8  bDevCapabilityType;
+} __attribute__((packed));
 
 struct function_class_info {
 	__u8 bClass;
 	__u8 bSubClass;
 	__u8 bProtocol;
 };
+
 
 struct usb_config_summary_descriptor {
 	__u8 bLength;
@@ -920,6 +925,13 @@ struct usb_config_summary_descriptor {
 	__u8 bNumFunctions;
 	struct function_class_info cs_info[];
 } __attribute__((packed));
+
+
+/*
+ * The size of the descriptor for the Sublink Speed Attribute Count
+ * (SSAC) specified in bmAttributes[4:0].
+ */
+#define USB_DT_USB_SSP_CAP_SIZE(ssac)	(16 + ssac * 4)
 
 /*-------------------------------------------------------------------------*/
 

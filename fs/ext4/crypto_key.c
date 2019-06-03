@@ -236,6 +236,7 @@ retry:
 	res = ext4_xattr_get(inode, EXT4_XATTR_INDEX_ENCRYPTION,
 				 EXT4_XATTR_NAME_ENCRYPTION_CONTEXT,
 				 &ctx, sizeof(ctx));
+			}
 	if (res < 0) {
 		if (!DUMMY_ENCRYPTION_ENABLED(sbi))
 			return res;
@@ -379,8 +380,9 @@ out:
 }
 
 int ext4_has_encryption_key(struct inode *inode)
+
 {
 	struct ext4_inode_info *ei = EXT4_I(inode);
-
+	
 	return (ei->i_crypt_info != NULL);
 }
