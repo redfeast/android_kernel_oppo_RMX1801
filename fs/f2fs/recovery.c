@@ -128,9 +128,14 @@ static int recover_dentry(struct inode *inode, struct page *ipage,
 			err = PTR_ERR(entry);
 			goto out;
 		}
+		}
 	}
 
 	dir = entry->inode;
+
+	if (file_enc_name(inode))
+		return 0;
+
 
 	memset(&fname, 0, sizeof(struct fscrypt_name));
 	fname.disk_name.len = le32_to_cpu(raw_inode->i_namelen);
@@ -176,10 +181,8 @@ retry:
 		goto retry;
 	} else if (IS_ERR(page)) {
 		err = PTR_ERR(page);
-	} else {
 		err = __f2fs_do_add_link(dir, &fname, inode,
 					inode->i_ino, inode->i_mode);
-	}
 	if (err == -ENOMEM)
 		goto retry;
 	goto out;
@@ -228,6 +231,7 @@ static int find_fsync_dnodes(struct f2fs_sb_info *sbi, struct list_head *head,
 				bool check_only)
 {
 	struct curseg_info *curseg;
+	struct inode *inode;
 	struct page *page = NULL;
 	block_t blkaddr;
 	int err = 0;
@@ -239,7 +243,7 @@ static int find_fsync_dnodes(struct f2fs_sb_info *sbi, struct list_head *head,
 	while (1) {
 		struct fsync_inode_entry *entry;
 
-		if (!is_valid_blkaddr(sbi, blkaddr, META_POR))
+		if (!f2fs_is_valid_blkaddr(sbi, blkaddr, META_POR))
 			return 0;
 
 		page = get_tmp_page(sbi, blkaddr);
@@ -274,6 +278,13 @@ static int find_fsync_dnodes(struct f2fs_sb_info *sbi, struct list_head *head,
 					err = 0;
 					goto next;
 				}
+				break;
+			}
+			/* add this fsync inode to the list */
+			entry = add_fsync_inode(head, inode);
+			if (!entry) {
+				err = -ENOMEM;
+				iput(inode);
 				break;
 			}
 		}
@@ -482,7 +493,7 @@ retry_dn:
 		}
 
 		/* dest is valid block, try to recover from src to dest */
-		if (is_valid_blkaddr(sbi, dest, META_POR)) {
+		if (f2fs_is_valid_blkaddr(sbi, dest, META_POR)) {
 
 			if (src == NULL_ADDR) {
 				err = reserve_new_block(&dn);
@@ -543,7 +554,7 @@ static int recover_data(struct f2fs_sb_info *sbi, struct list_head *inode_list,
 	while (1) {
 		struct fsync_inode_entry *entry;
 
-		if (!is_valid_blkaddr(sbi, blkaddr, META_POR))
+		if (!f2fs_is_valid_blkaddr(sbi, blkaddr, META_POR))
 			break;
 
 		ra_meta_pages_cond(sbi, blkaddr);
@@ -654,7 +665,9 @@ skip:
 
 	clear_sbi_flag(sbi, SBI_POR_DOING);
 	mutex_unlock(&sbi->cp_mutex);
-
+	/* let's drop all the directory inodes for clean checkpoint */
+	destroy_fsync_dnodes(&dir_list);
+	if (!err && need_writecp) {
 	/* let's drop all the directory inodes for clean checkpoint */
 	destroy_fsync_dnodes(&dir_list);
 

@@ -217,4 +217,6 @@ TRACE_EVENT(kvm_booke_queue_irqprio,
 #endif
 
 /* This part must be outside protection */
+
+
 #include <trace/define_trace.h>

@@ -781,19 +781,14 @@ static struct discard_cmd *__attach_discard_cmd(struct f2fs_sb_info *sbi,
 
 static void __detach_discard_cmd(struct discard_cmd_control *dcc,
 							struct discard_cmd *dc)
-{
 	if (dc->state == D_DONE)
 		atomic_dec(&dcc->issing_discard);
-
 	list_del(&dc->list);
 	rb_erase(&dc->rb_node, &dcc->root);
 	dcc->undiscard_blks -= dc->len;
-
 	kmem_cache_free(discard_cmd_slab, dc);
-
 	atomic_dec(&dcc->discard_cmd_cnt);
 }
-
 static void __remove_discard_cmd(struct f2fs_sb_info *sbi,
 							struct discard_cmd *dc)
 {
@@ -819,8 +814,6 @@ static void f2fs_submit_discard_endio(struct bio *bio)
 	dc->state = D_DONE;
 	complete_all(&dc->wait);
 	bio_put(bio);
-}
-
 /* copied from block/blk-lib.c in 4.10-rc1 */
 static int __blkdev_issue_discard(struct block_device *bdev, sector_t sector,
 		sector_t nr_sects, gfp_t gfp_mask, int flags,
@@ -1840,7 +1833,7 @@ bool is_checkpointed_data(struct f2fs_sb_info *sbi, block_t blkaddr)
 	struct seg_entry *se;
 	bool is_cp = false;
 
-	if (blkaddr == NEW_ADDR || blkaddr == NULL_ADDR)
+	if (!is_valid_data_blkaddr(sbi, blkaddr))
 		return true;
 
 	mutex_lock(&sit_i->sentry_lock);
@@ -3331,6 +3324,7 @@ static void build_sit_entries(struct f2fs_sb_info *sbi)
 	int sit_blk_cnt = SIT_BLK_CNT(sbi);
 	unsigned int i, start, end;
 	unsigned int readed, start_blk = 0;
+	int err = 0;
 
 	do {
 		readed = ra_meta_pages(sbi, start_blk, BIO_MAX_PAGES,
@@ -3349,7 +3343,9 @@ static void build_sit_entries(struct f2fs_sb_info *sbi)
 			sit = sit_blk->entries[SIT_ENTRY_OFFSET(sit_i, start)];
 			f2fs_put_page(page, 1);
 
-			check_block_count(sbi, start, &sit);
+			err = check_block_count(sbi, start, &sit);
+			if (err)
+				return err;
 			seg_info_from_raw_sit(se, &sit);
 
 			/* build discard map only one time */
@@ -3573,7 +3569,9 @@ int build_segment_manager(struct f2fs_sb_info *sbi)
 		return err;
 
 	/* reinit free segmap based on SIT */
-	build_sit_entries(sbi);
+	err = build_sit_entries(sbi);
+	if (err)
+		return err;
 
 	init_free_segmap(sbi);
 	err = build_dirty_segmap(sbi);

@@ -144,7 +144,6 @@ static void vb2_warn_zero_bytesused(struct vb2_buffer *vb)
 #ifndef VENDOR_EDIT
 //Jingcheng.Li@PSW.MM.MediaServer.Record.1445776, 2018/08/29,
 //Remove for avoiding qcom output logs asserting causes encoder or decoder crash.
-	WARN_ON(1);
 #endif /* VENDOR_EDIT */
 
 	pr_warn("use of bytesused == 0 is deprecated and will be removed in the future,\n");
