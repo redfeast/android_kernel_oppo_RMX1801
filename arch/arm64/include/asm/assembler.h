@@ -362,6 +362,13 @@ alternative_endif
 	.size	__pi_##x, . - x;	\
 	ENDPROC(x)
 
+	.macro	le64sym, sym
+	.long	\sym\()_lo32
+	.long	\sym\()_hi32
+	.endm
+
+
+
 	/*
 	 * mov_q - move an immediate constant into a 64-bit register using
 	 *         between 2 and 4 movz/movk instructions (depending on the
@@ -418,7 +425,11 @@ alternative_endif
 	cset		\tmp2, le
 	and		\res, \res, \tmp2
 	.endif
+	
 .Ldone\@:
 	.endm
+        .macro  get_thread_info, rd
+        mrs     \rd, sp_el0
+        .endm
 
 #endif	/* __ASM_ASSEMBLER_H */
