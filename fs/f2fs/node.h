@@ -244,11 +244,6 @@ static inline nid_t ino_of_node(struct page *node_page)
 	return le32_to_cpu(rn->footer.ino);
 }
 
-static inline nid_t nid_of_node(struct page *node_page)
-{
-	struct f2fs_node *rn = F2FS_NODE(node_page);
-	return le32_to_cpu(rn->footer.nid);
-}
 
 static inline unsigned int ofs_of_node(struct page *node_page)
 {
@@ -269,11 +264,6 @@ static inline block_t next_blkaddr_of_node(struct page *node_page)
 	return le32_to_cpu(rn->footer.next_blkaddr);
 }
 
-static inline nid_t ino_of_node(struct page *node_page)
-{
-	struct f2fs_node *rn = F2FS_NODE(node_page);
-	return le32_to_cpu(rn->footer.ino);
-}
 
 static inline nid_t nid_of_node(struct page *node_page)
 {
@@ -281,24 +271,8 @@ static inline nid_t nid_of_node(struct page *node_page)
 	return le32_to_cpu(rn->footer.nid);
 }
 
-static inline unsigned int ofs_of_node(struct page *node_page)
-{
-	struct f2fs_node *rn = F2FS_NODE(node_page);
-	unsigned flag = le32_to_cpu(rn->footer.flag);
-	return flag >> OFFSET_BIT_SHIFT;
-}
 
-static inline __u64 cpver_of_node(struct page *node_page)
-{
-	struct f2fs_node *rn = F2FS_NODE(node_page);
-	return le64_to_cpu(rn->footer.cp_ver);
-}
 
-static inline block_t next_blkaddr_of_node(struct page *node_page)
-{
-	struct f2fs_node *rn = F2FS_NODE(node_page);
-	return le32_to_cpu(rn->footer.next_blkaddr);
-}
 
 static inline void fill_node_footer(struct page *page, nid_t nid,
 				nid_t ino, unsigned int ofs, bool reset)
@@ -328,7 +302,7 @@ static inline void copy_node_footer(struct page *dst, struct page *src)
 
 static inline void fill_node_footer_blkaddr(struct page *page, block_t blkaddr)
 {
-	struct f2fs_checkpoint *ckpt = F2FS_CKPT(F2FS_P_SB(page));
+	struct f2fs_sb_info *ckpt = F2FS_CKPT(F2FS_P_SB(page));
 	struct f2fs_node *rn = F2FS_NODE(page);
 	size_t crc_offset = le32_to_cpu(ckpt->checksum_offset);
 	__u64 cp_ver = le64_to_cpu(ckpt->checkpoint_ver);
@@ -344,7 +318,7 @@ static inline void fill_node_footer_blkaddr(struct page *page, block_t blkaddr)
 
 static inline bool is_recoverable_dnode(struct page *page)
 {
-	struct f2fs_checkpoint *ckpt = F2FS_CKPT(F2FS_P_SB(page));
+	struct f2fs_sb_info *ckpt = F2FS_CKPT(F2FS_P_SB(page));
 	size_t crc_offset = le32_to_cpu(ckpt->checksum_offset);
 	__u64 cp_ver = cur_cp_version(ckpt);
 

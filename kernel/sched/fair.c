@@ -4423,6 +4423,7 @@ void sync_entity_load_avg(struct sched_entity *se)
 	u64 last_update_time;
 
 	last_update_time = cfs_rq_last_update_time(cfs_rq);
+	/* 
 	 * Newly created task or never used group entity should not be removed
 	 * from its (source) cfs_rq
 	 */

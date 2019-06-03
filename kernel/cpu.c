@@ -929,6 +929,7 @@ static int __init mitigations_parse_cmdline(char *arg)
 		cpu_mitigations = CPU_MITIGATIONS_AUTO;
 
 	return 0;
+}
 void init_cpu_isolated(const struct cpumask *src)
 {
 	cpumask_copy(to_cpumask(cpu_isolated_bits), src);
@@ -953,3 +954,4 @@ void idle_notifier_call_chain(unsigned long val)
 	atomic_notifier_call_chain(&idle_notifier, val, NULL);
 }
 EXPORT_SYMBOL_GPL(idle_notifier_call_chain);
+early_param("mitigations", mitigations_parse_cmdline);

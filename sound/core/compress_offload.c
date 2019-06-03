@@ -912,6 +912,7 @@ static long snd_compr_ioctl_compat(struct file *file, unsigned int cmd,
 }
 #endif
 
+#ifdef CONFIG_COMPAT
 static const struct file_operations snd_compr_file_ops = {
 		.owner =          THIS_MODULE,
 		.open =           snd_compr_open,
